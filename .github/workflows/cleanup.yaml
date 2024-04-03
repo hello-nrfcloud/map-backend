@@ -1,0 +1,73 @@
+name: Cleanup
+
+permissions:
+  id-token: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      stackName:
+        description: "Name of the stack to clean"
+        required: true
+      mqtt_bridge_tag:
+        description: "MQTT bridge container tag to deploy"
+        required: true
+      coap_simulator_tag:
+        description: "CoAP simulator container tag to deploy"
+        required: true
+      openssl_lambda_tag:
+        description: "OpenSSL lambda container tag to deploy"
+        required: true
+env:
+  CI: 1
+  FORCE_COLOR: 3
+  JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION: 1
+  STACK_NAME: ${{ github.event.inputs.stackName }}
+  MQTT_BRIDGE_CONTAINER_TAG: ${{ github.event.inputs.mqtt_bridge_tag }}
+  COAP_SIMULATOR_CONTAINER_TAG: ${{ github.event.inputs.coap_simulator_tag }}
+  OPENSSL_LAMBDA_CONTAINER_TAG: ${{ github.event.inputs.openssl_lambda_tag }}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-22.04
+
+    environment: ci
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: store checkout out version
+        id: ref
+        run: echo "ref=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci --no-audit
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: github-action-hello-nrfcloud-map-backend
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Clean up End-to-End test resources
+        run: |
+          ./cli.sh logs -X
+          npx cdk destroy --all -f
+          npx cdk --app 'npx tsx --no-warnings cdk/test-resources.ts' destroy -f
+          ./cli.sh fake-nrfcloud-account-device nordic --remove
+          ./cli.sh configure-nrfcloud-account nordic apiEndpoint -X
+          ./cli.sh configure-nrfcloud-account nordic apiKey -X
+          ./cli.sh fake-nrfcloud-account-device elite --remove
+          ./cli.sh configure-nrfcloud-account elite apiEndpoint -X
+          ./cli.sh configure-nrfcloud-account elite apiKey -X
+          ./cli.sh clean-backup-certificates
+          aws ecr delete-repository --force --repository-name ${{ env.STACK_NAME }}-coap-simulator
+          aws ecr delete-repository --force --repository-name ${{ env.STACK_NAME }}-openssl-lambda
+          aws ecr delete-repository --force --repository-name ${{ env.STACK_NAME }}-mqtt-bridge

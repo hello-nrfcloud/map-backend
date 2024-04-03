@@ -1,0 +1,129 @@
+{
+  "name": "@hello.nrfcloud.com/backend",
+  "version": "0.0.0-development",
+  "description": "Cloud backend for hello.nrfcloud.com developed using AWS CDK in TypeScript",
+  "type": "module",
+  "scripts": {
+    "test": "npx globstar -- npx tsx --test --test-reporter spec \"!(dist|node_modules)/**/*.spec.ts\"",
+    "test:e2e": "npx tsx --no-warnings ./feature-runner/run-features.ts > e2e-test-result.json && cat e2e-test-result.json | npx tsx --no-warnings ./feature-runner/console-reporter.ts --only-failed --with-timestamps",
+    "prepare": "husky && check-node-version --package",
+    "deploy": "cdk deploy",
+    "synth": "cdk synth"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hello-nrfcloud/map-backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hello-nrfcloud/map-backend/issues"
+  },
+  "homepage": "https://github.com/hello-nrfcloud/map-backend#readme",
+  "keywords": [
+    "nordicsemiconductor",
+    "cellular-iot",
+    "hello-nrfcloud",
+    "aws",
+    "cdk"
+  ],
+  "author": "Nordic Semiconductor ASA | nordicsemi.no",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "3.540.0",
+    "@aws-sdk/client-cloudformation": "3.540.0",
+    "@aws-sdk/client-cloudwatch-logs": "3.540.0",
+    "@aws-sdk/client-dynamodb": "3.540.0",
+    "@aws-sdk/client-ecr": "3.540.0",
+    "@aws-sdk/client-ecs": "3.547.0",
+    "@aws-sdk/client-eventbridge": "3.540.0",
+    "@aws-sdk/client-iam": "3.540.0",
+    "@aws-sdk/client-iot": "3.540.0",
+    "@aws-sdk/client-iot-data-plane": "3.540.0",
+    "@aws-sdk/client-lambda": "3.540.0",
+    "@aws-sdk/client-ses": "3.540.0",
+    "@aws-sdk/client-sqs": "3.547.0",
+    "@aws-sdk/client-ssm": "3.540.0",
+    "@aws-sdk/client-sts": "3.540.0",
+    "@aws-sdk/client-timestream-query": "3.540.0",
+    "@aws-sdk/client-timestream-write": "3.540.0",
+    "@aws-sdk/util-dynamodb": "3.540.0",
+    "@bifravst/aws-cdk-lambda-helpers": "1.0.2",
+    "@bifravst/eslint-config-typescript": "6.0.17",
+    "@bifravst/prettier-config": "1.0.0",
+    "@commitlint/config-conventional": "19.1.0",
+    "@nordicsemiconductor/bdd-markdown": "8.0.16",
+    "@nordicsemiconductor/cloudformation-helpers": "9.0.3",
+    "@nordicsemiconductor/firmware-ci-device-helpers": "14.0.201",
+    "@swc/cli": "0.3.12",
+    "@swc/core": "1.4.11",
+    "@types/aws-lambda": "8.10.136",
+    "@types/glob": "8.1.0",
+    "@types/lodash-es": "4.17.12",
+    "@types/semver": "7.5.8",
+    "@types/ws": "8.5.10",
+    "@types/yazl": "2.4.5",
+    "aws-cdk": "2.135.0",
+    "aws-cdk-lib": "2.135.0",
+    "cdk": "2.135.0",
+    "chalk": "5.3.0",
+    "check-node-version": "4.2.1",
+    "commander": "12.0.0",
+    "commitlint": "19.2.1",
+    "constructs": "10.3.0",
+    "glob": "10.3.12",
+    "globstar": "1.0.0",
+    "husky": "9.0.11",
+    "id128": "1.6.6",
+    "jsonata": "2.0.4",
+    "mqtt": "5.5.0",
+    "p-retry": "6.2.0",
+    "semver": "7.6.0",
+    "tsmatchers": "5.0.2",
+    "tsx": "4.7.1",
+    "ws": "8.16.0",
+    "yazl": "2.5.1"
+  },
+  "lint-staged": {
+    "*.{md,json,yaml,yml}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint"
+    ]
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=9"
+  },
+  "release": {
+    "branches": [
+      "saga"
+    ],
+    "remoteTags": true,
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/github",
+        {
+          "successComment": false,
+          "failTitle": false
+        }
+      ]
+    ]
+  },
+  "prettier": "@bifravst/prettier-config",
+  "dependencies": {
+    "@aws-lambda-powertools/metrics": "2.0.3",
+    "@hello.nrfcloud.com/proto": "6.4.42",
+    "@hello.nrfcloud.com/proto-map": "5.0.3",
+    "@middy/core": "5.3.2",
+    "@nordicsemiconductor/from-env": "3.0.1",
+    "@nordicsemiconductor/random-words": "8.0.1",
+    "@nordicsemiconductor/timestream-helpers": "6.0.2",
+    "@sinclair/typebox": "0.32.20",
+    "lodash-es": "4.17.21",
+    "p-limit": "5.0.0",
+    "table": "6.8.2"
+  }
+}
