@@ -21,8 +21,6 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-22.04
 
-    environment: ci
-
     timeout-minutes: 30
 
     outputs:
@@ -64,9 +62,12 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          role-session-name: github-action-hello-nrfcloud-map-backend
-          aws-region: ${{ vars.AWS_REGION }}
+          # The role is set up via https://github.com/bifravst/ci
+          # secrets.AWS_ACCOUNT_ID_CI is an organization secret
+          role-to-assume: |
+            arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_CI }}:role/${{ github.repository_owner }}-ci-${{ github.event.repository.name }}
+          # vars.AWS_REGION_CI is an organization variable
+          aws-region: ${{ vars.AWS_REGION_CI }}
 
       - name: Generate Stack ID
         run: |
@@ -187,8 +188,6 @@ jobs:
     runs-on: ubuntu-22.04
 
     if: github.ref == 'refs/heads/saga'
-
-    environment: ci
 
     steps:
       - uses: actions/checkout@v4
