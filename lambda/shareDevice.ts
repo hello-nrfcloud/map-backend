@@ -2,40 +2,45 @@ import {
 	ConditionalCheckFailedException,
 	DynamoDBClient,
 } from '@aws-sdk/client-dynamodb'
-import { fromEnv } from '@nordicsemiconductor/from-env'
-import lambda, { type APIGatewayProxyResultV2 } from 'aws-lambda'
-import { Type } from '@sinclair/typebox'
-import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
 import { SESClient } from '@aws-sdk/client-ses'
-import { sendOwnershipVerificationEmail } from './sendOwnershipVerificationEmail.js'
-import { DeviceId, Model } from '@hello.nrfcloud.com/proto-map/api'
-import { Context } from '@hello.nrfcloud.com/proto-map/api'
 import {
 	formatTypeBoxErrors,
 	validateWithTypeBox,
 } from '@hello.nrfcloud.com/proto'
+import { Context, Model } from '@hello.nrfcloud.com/proto-map/api'
+import { fromEnv } from '@nordicsemiconductor/from-env'
+import { Type } from '@sinclair/typebox'
+import lambda, { type APIGatewayProxyResultV2 } from 'aws-lambda'
 import { randomUUID } from 'node:crypto'
+import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
+import { sendOwnershipVerificationEmail } from './sendOwnershipVerificationEmail.js'
 
-import middy from '@middy/core'
-import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
-import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
-import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { MetricUnit } from '@aws-lambda-powertools/metrics'
-import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
 import { logMetrics } from '@aws-lambda-powertools/metrics/middleware'
+import { SSMClient } from '@aws-sdk/client-ssm'
+import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
+import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
+import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
+import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
+import middy from '@middy/core'
+import { getSettings } from '../settings/hello.js'
 
-const { publicDevicesTableName, fromEmail, isTestString, version } = fromEnv({
-	version: 'VERSION',
-	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
-	fromEmail: 'FROM_EMAIL',
-	isTestString: 'IS_TEST',
-})(process.env)
+const { publicDevicesTableName, fromEmail, isTestString, version, stackName } =
+	fromEnv({
+		version: 'VERSION',
+		publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
+		fromEmail: 'FROM_EMAIL',
+		isTestString: 'IS_TEST',
+		stackName: 'STACK_NAME',
+	})(process.env)
 
 const isTest = isTestString === '1'
 
 const db = new DynamoDBClient({})
 const ses = new SESClient({})
+const ssm = new SSMClient({})
 
 const publicDevice = publicDevicesRepo({
 	db,
@@ -49,18 +54,28 @@ const { track, metrics } = metricsForComponent(
 	'hello-nrfcloud-map',
 )
 
+const hello = await getSettings({ ssm, stackName })
+
 const validateInput = validateWithTypeBox(
-	Type.Object({
-		// If no deviceID is provided a new deviceID is generated.
-		// This is useful in case a custom device needs to be published.
-		deviceId: Type.Optional(DeviceId),
-		model: Model,
-		email: Type.RegExp(/.+@.+/, {
-			title: 'Email',
-			description:
-				'The email of the owner of the device. They have to confirm the publication of the device every 30 days.',
+	Type.Intersect([
+		Type.Union([
+			// Out of box devices can be published using their fingerprint
+			Type.Object({
+				fingerprint: Type.RegExp(fingerprintRegExp),
+			}),
+			// This is used in the case a custom device needs to be published.
+			Type.Object({
+				model: Model,
+			}),
+		]),
+		Type.Object({
+			email: Type.RegExp(/.+@.+/, {
+				title: 'Email',
+				description:
+					'The email of the owner of the device. They have to confirm the publication of the device every 30 days.',
+			}),
 		}),
-	}),
+	]),
 )
 
 const h = async (
@@ -77,11 +92,44 @@ const h = async (
 		})
 	}
 
-	const { deviceId: maybeDeviceId, model, email } = maybeValidInput.value
+	const { email } = maybeValidInput.value
 
-	// TODO: limit the amount of devices that can be created
-	const deviceId = maybeDeviceId ?? `map-${randomUUID()}`
+	if ('fingerprint' in maybeValidInput.value) {
+		// FIXME: validate fetch
+		// '@context': 'https://github.com/hello-nrfcloud/proto/deviceIdentity',
+		const { id: deviceId, model } = await (
+			await fetch(
+				new URL(
+					`./device?${new URLSearchParams({ fingerprint: maybeValidInput.value.fingerprint }).toString()}`,
+					hello.apiEndpoint,
+				),
+			)
+		).json()
+		return publish({
+			deviceId,
+			model,
+			email,
+		})
+	} else {
+		// TODO: limit the amount of devices that can be created by a user
+		const deviceId = `map-${randomUUID()}`
+		return publish({
+			deviceId,
+			model: maybeValidInput.value.model,
+			email,
+		})
+	}
+}
 
+const publish = async ({
+	deviceId,
+	model,
+	email,
+}: {
+	deviceId: string
+	model: string
+	email: string
+}): Promise<APIGatewayProxyResultV2> => {
 	const maybePublished = await publicDevice.share({
 		deviceId,
 		model,

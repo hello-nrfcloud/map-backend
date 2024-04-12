@@ -16,6 +16,7 @@ import { env } from '../aws/env.js'
 import { configureNrfCloudAccount } from './commands/configure-nrfcloud-account.js'
 import { logsCommand } from './commands/logs.js'
 import { CloudWatchLogsClient } from '@aws-sdk/client-cloudwatch-logs'
+import { configureHello } from './commands/configure-hello.js'
 
 const ssm = new SSMClient({})
 const db = new DynamoDBClient({})
@@ -49,6 +50,7 @@ const CLI = async ({ isCI }: { isCI: boolean }) => {
 		buildContainersCommand({
 			ecr,
 		}),
+		configureHello({ ssm }),
 		configureNrfCloudAccount({ ssm }),
 		logsCommand({
 			stackName: STACK_NAME,

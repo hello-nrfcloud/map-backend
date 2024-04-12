@@ -6,15 +6,14 @@ import {
 	deleteSettings,
 	putSetting,
 	type Settings,
-} from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
-import { NRF_CLOUD_ACCOUNT } from '../../settings/account.js'
+} from '../../settings/hello.js'
 
-export const configureNrfCloudAccount = ({
+export const configureHello = ({
 	ssm,
 }: {
 	ssm: SSMClient
 }): CommandDefinition => ({
-	command: 'configure-nrfcloud-account <property> [value]',
+	command: 'configure-hello <property> [value]',
 	options: [
 		{
 			flags: '-d, --deleteBeforeUpdate',
@@ -26,7 +25,7 @@ export const configureNrfCloudAccount = ({
 		},
 	],
 	action: async (
-		property: string,
+		property: keyof Settings,
 		value: string | undefined,
 		{ deleteBeforeUpdate, deleteParameter },
 	) => {
@@ -35,7 +34,6 @@ export const configureNrfCloudAccount = ({
 			const { name } = await deleteSettings({
 				ssm,
 				stackName: STACK_NAME,
-				account: NRF_CLOUD_ACCOUNT,
 			})(property)
 			console.log()
 			console.log(
@@ -52,8 +50,7 @@ export const configureNrfCloudAccount = ({
 		const { name } = await putSetting({
 			ssm,
 			stackName: STACK_NAME,
-			account: NRF_CLOUD_ACCOUNT,
-		})(property as keyof Settings, value, deleteBeforeUpdate)
+		})(property as keyof Settings, new URL(value), deleteBeforeUpdate)
 
 		console.log()
 		console.log(

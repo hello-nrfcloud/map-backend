@@ -9,6 +9,63 @@ import {
 	type StepRunner,
 } from '@nordicsemiconductor/bdd-markdown'
 import { Type } from '@sinclair/typebox'
+import { fingerprintGenerator } from '@hello.nrfcloud.com/proto/fingerprint'
+import { IMEI } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
+import type { HttpAPIMock } from '@bifravst/http-api-mock/mock'
+
+const getCurrentWeekNumber = (): number => {
+	const now = new Date()
+	const firstOfJanuary = new Date(now.getFullYear(), 0, 1)
+	return Math.ceil(
+		((now.getTime() - firstOfJanuary.getTime()) / 86400000 +
+			firstOfJanuary.getDay() +
+			1) /
+			7,
+	)
+}
+
+const oobDeviceWithFingerprint = (
+	httpApiMock: HttpAPIMock,
+	helloAPIBasePath: string,
+) =>
+	regExpMatchedStep(
+		{
+			regExp:
+				/^I have the fingerprint for my device in `(?<storageName>[^`]+)`$/,
+			schema: Type.Object({
+				storageName: Type.String({ minLength: 1 }),
+			}),
+		},
+		async ({ match: { storageName }, log: { progress }, context }) => {
+			const now = new Date()
+			const fingerprint = fingerprintGenerator(
+				parseInt(
+					`${(now.getFullYear() - 2000).toString()}${getCurrentWeekNumber()}`,
+					10,
+				),
+			)()
+			progress(`Fingerprint: ${fingerprint}`)
+			context[storageName] = fingerprint
+			const deviceId = `oob-${IMEI()}`
+			progress(`DeviceID: ${deviceId}`)
+
+			await httpApiMock.response(
+				`GET ${helloAPIBasePath}/device?fingerprint=${fingerprint}`,
+				{
+					status: 200,
+					headers: new Headers({
+						'content-type': 'application/json; charset=utf-8',
+					}),
+					body: JSON.stringify({
+						'@context':
+							'https://github.com/hello-nrfcloud/proto/deviceIdentity',
+						id: deviceId,
+						model: 'PCA20035+solar',
+					}),
+				},
+			)
+		},
+	)
 
 const publishDeviceMessage = (iotData: IoTDataPlaneClient) =>
 	regExpMatchedStep(
@@ -40,6 +97,13 @@ const publishDeviceMessage = (iotData: IoTDataPlaneClient) =>
 
 export const steps = ({
 	iotData,
+	httpApiMock,
+	helloAPIBasePath,
 }: {
 	iotData: IoTDataPlaneClient
-}): Array<StepRunner<Record<string, any>>> => [publishDeviceMessage(iotData)]
+	httpApiMock: HttpAPIMock
+	helloAPIBasePath: string
+}): Array<StepRunner<Record<string, any>>> => [
+	publishDeviceMessage(iotData),
+	oobDeviceWithFingerprint(httpApiMock, helloAPIBasePath),
+]

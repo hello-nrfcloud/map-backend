@@ -1,5 +1,6 @@
 ---
 exampleContext:
+  fingerprint: 92b.y7i24q
   deviceId: oob-352656108602296
   publicDeviceId: outfling-swanherd-attaghan
   API: "https://iiet67bnlmbtuhiblik4wcy4ni0oujot.execute-api.eu-west-1.amazonaws.com/2024-04-12"
@@ -16,26 +17,25 @@ exampleContext:
 > This works for the Thingy:91 X because they have credentials that already tie
 > them to the nRF Cloud account that is used by `hello.nrfcloud.com/map`. The
 > only thing the user needs to do is to consent to the sharing.
+>
+> Note: Users need to know the fingerprint of the device in order to prevent
+> them sharing devices they don't have access to by guessing the IMEI.
 
 ## Background
 
-> The `deviceId` and `model` is provided in a link from the device page on
-> `hello.nrfcloud.com`.
-
-Given I have a random device ID in `deviceId`
+Given I have the fingerprint for my device in `fingerprint`
 
 And I have a random email in `email`
 
 ## Share the device
 
-> Using the device ID I can share the device
+> Using the device fingerprint I can share the device
 
 When I `POST` to `${API}/share` with
 
 ```json
 {
-  "deviceId": "${deviceId}",
-  "model": "PCA20035+solar",
+  "fingerprint": "${fingerprint}",
   "email": "${email}"
 }
 ```
@@ -44,6 +44,8 @@ Then I should receive a
 `https://github.com/hello-nrfcloud/proto-map/share-device-request` response
 
 And I store `id` of the last response into `publicDeviceId`
+
+And I store `deviceId` of the last response into `deviceId`
 
 ## Confirm the email
 

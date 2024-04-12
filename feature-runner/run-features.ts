@@ -6,14 +6,13 @@ import path from 'node:path'
 import type { StackOutputs as BackendStackOutputs } from '../cdk/stacks/BackendStack.js'
 import { STACK_NAME } from '../cdk/stacks/stackConfig.js'
 import { steps as storageSteps } from '@hello.nrfcloud.com/bdd-markdown-steps/storage'
-import {
-	steps as randomSteps,
-	email,
-	IMEI,
-} from '@hello.nrfcloud.com/bdd-markdown-steps/random'
+import { steps as randomSteps } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
 import { steps as deviceSteps } from './steps/device.js'
 import { steps as RESTSteps } from '@hello.nrfcloud.com/bdd-markdown-steps/REST'
 import { IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane'
+import { fromEnv } from '@nordicsemiconductor/from-env'
+import { mock as httpApiMock } from '@bifravst/http-api-mock/mock'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { slashless } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 
 /**
@@ -24,10 +23,17 @@ import { slashless } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
  */
 
 const iotData = new IoTDataPlaneClient({})
+const db = new DynamoDBClient({})
 
 const backendConfig = await stackOutput(
 	new CloudFormationClient({}),
 )<BackendStackOutputs>(STACK_NAME)
+
+const { mockApiEndpoint, responsesTableName } = fromEnv({
+	mockApiEndpoint: 'HTTP_API_MOCK_API_URL',
+	responsesTableName: 'HTTP_API_MOCK_RESPONSES_TABLE_NAME',
+	requestsTableName: 'HTTP_API_MOCK_REQUESTS_TABLE_NAME',
+})(process.env)
 
 const print = (arg: unknown) =>
 	typeof arg === 'object' ? JSON.stringify(arg) : arg
@@ -74,23 +80,25 @@ const runner = await runFolder({
 
 const cleaners: (() => Promise<void>)[] = []
 
+const helloAPIBasePath = 'hello-api'
 runner
 	.addStepRunners(...storageSteps)
-	.addStepRunners(
-		...randomSteps({
-			email,
-			'device ID': () => `oob-${IMEI()}`,
-		}),
-	)
+	.addStepRunners(...randomSteps())
 	.addStepRunners(...RESTSteps)
 	.addStepRunners(
 		...deviceSteps({
 			iotData,
+			httpApiMock: httpApiMock({
+				db,
+				responsesTable: responsesTableName,
+			}),
+			helloAPIBasePath,
 		}),
 	)
 
 const res = await runner.run({
 	API: slashless(new URL(backendConfig.APIURL)),
+	helloAPI: new URL(`${mockApiEndpoint}${helloAPIBasePath}`),
 })
 
 await Promise.all(cleaners.map(async (fn) => fn()))

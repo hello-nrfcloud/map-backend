@@ -8,6 +8,7 @@ import { Construct } from 'constructs'
 import type { PublicDevices } from './PublicDevices.js'
 import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import type { BackendLambdas } from '../BackendLambdas.js'
+import { Permissions } from '@hello.nrfcloud.com/nrfcloud-api-helpers/cdk'
 
 export class ShareAPI extends Construct {
 	public readonly shareFn: Lambda.IFunction
@@ -47,6 +48,7 @@ export class ShareAPI extends Construct {
 				FROM_EMAIL: `notification@${domain}`,
 				NODE_NO_WARNINGS: '1',
 				IS_TEST: this.node.getContext('isTest') === true ? '1' : '0',
+				STACK_NAME: Stack.of(this).stackName,
 			},
 			...new LambdaLogGroup(this, 'shareFnLogs'),
 			initialPolicy: [
@@ -63,6 +65,7 @@ export class ShareAPI extends Construct {
 						},
 					},
 				}),
+				Permissions(Stack.of(this)),
 			],
 		})
 		publicDevices.publicDevicesTable.grantWriteData(this.shareFn)
