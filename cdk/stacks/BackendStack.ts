@@ -118,7 +118,7 @@ export class BackendStack extends Stack {
 			publicDevices,
 		})
 
-		api.addRoute('PUT /credentials', customDevicesAPI.createCredentials)
+		api.addRoute('POST /credentials', customDevicesAPI.createCredentials)
 
 		const cd = new ContinuousDeployment(this, {
 			repository,

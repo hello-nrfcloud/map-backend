@@ -89,6 +89,7 @@ const h = async (
 		return aResponse(
 			200,
 			{
+				// FIXME: add to proto-map
 				'@context': new URL(
 					'https://github.com/hello-nrfcloud/proto-map/history',
 				),
