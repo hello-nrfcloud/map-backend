@@ -1,0 +1,309 @@
+name: Test and Release
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+  actions: write
+  packages: write
+
+env:
+  CI: 1
+  FORCE_COLOR: 3
+  JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION: 1
+  REGISTRY: ghcr.io
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit
+
+      - name: Compile TypeScript
+        run: npx tsc
+
+      - name: Check source code with eslint
+        run: npx eslint .
+
+      - name: Check if source code is properly formatted
+        run: npx prettier -c ./
+
+      - name: Run Unit Tests
+        run: npm test
+
+  http-api-mock:
+    needs: [unit-tests]
+
+    runs-on: ubuntu-22.04
+
+    timeout-minutes: 5
+
+    outputs:
+      stackName: ${{ steps.create.outputs.stackName }}
+      responsesTableName: ${{ steps.create.outputs.responsesTableName }}
+      apiURL: ${{ steps.create.outputs.apiURL }}
+      requestsTableName: ${{ steps.create.outputs.requestsTableName }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # The role is set up via https://github.com/hello-nrfcloud/ci
+          # secrets.AWS_ACCOUNT_ID_CI is an organization secret
+          role-to-assume: |
+            arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_CI }}:role/${{ github.repository_owner }}-ci-${{ github.event.repository.name }}
+          # vars.AWS_REGION_CI is an organization variable
+          aws-region: ${{ vars.AWS_REGION_CI }}
+
+      - name: Create HTTP API mock
+        id: create
+        run: |
+          npx @bifravst/http-api-mock > http-api-mock.json
+          echo "stackName=`jq -r '.stackName' http-api-mock.json`" >> $GITHUB_OUTPUT
+          echo "responsesTableName=`jq -r '.responsesTableName' http-api-mock.json`" >> $GITHUB_OUTPUT
+          echo "apiURL=`jq -r '.apiURL' http-api-mock.json`" >> $GITHUB_OUTPUT
+          echo "requestsTableName=`jq -r '.requestsTableName' http-api-mock.json`" >> $GITHUB_OUTPUT
+
+  stack-name:
+    needs: [unit-tests]
+
+    runs-on: ubuntu-22.04
+
+    outputs:
+      stackName: ${{ steps.stackName.outputs.stackName }}
+
+    steps:
+      - name: Generate Stack ID
+        id: stackName
+        run: |
+          RANDOM_STRING=`node -e "const crypto = require('crypto'); process.stdout.write(crypto.randomBytes(Math.ceil(8 * 0.5)).toString('hex').slice(0, 8));"`
+          echo "stackName=hni-${RANDOM_STRING}" >> $GITHUB_OUTPUT
+
+  # Containers are rebuilt for every run, this ensures that they can actually
+  # be built. If we were to use a pre-built version here we could run into
+  # the risk that they are no longer buildable.
+
+  openssl-lambda-container:
+    needs: [stack-name, unit-tests]
+
+    runs-on: ubuntu-22.04
+
+    timeout-minutes: 5
+
+    env:
+      STACK_NAME: ${{ needs.stack-name.outputs.stackName }}
+
+    outputs:
+      tag: ${{ steps.build.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # The role is set up via https://github.com/hello-nrfcloud/ci
+          # secrets.AWS_ACCOUNT_ID_CI is an organization secret
+          role-to-assume: |
+            arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_CI }}:role/${{ github.repository_owner }}-ci-${{ github.event.repository.name }}
+          # vars.AWS_REGION_CI is an organization variable
+          aws-region: ${{ vars.AWS_REGION_CI }}
+
+      - name: Build OpenSSL Lambda container
+        id: build
+        run: |
+          TAG=$(./cli.sh build-container --pull openssl-lambda)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Publish Docker image to repository registry
+        run: |
+          docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ${{ env.REGISTRY }}
+          docker tag openssl-lambda:${{ steps.build.outputs.tag }} ${{ env.REGISTRY }}/${{ github.repository }}/openssl-lambda:${{ steps.build.outputs.tag }}
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}/openssl-lambda:${{ steps.build.outputs.tag }}
+
+  e2e-tests:
+    needs:
+      - http-api-mock
+      - unit-tests
+      - stack-name
+      - openssl-lambda-container
+
+    runs-on: ubuntu-22.04
+
+    timeout-minutes: 30
+
+    outputs:
+      ref: ${{ steps.ref.outputs.ref }}
+
+    env:
+      STACK_NAME: ${{ needs.stack-name.outputs.stackName }}
+      OPENSSL_LAMBDA_CONTAINER_TAG:
+        ${{ needs.openssl-lambda-container.outputs.tag }}
+      HTTP_API_MOCK_RESPONSES_TABLE_NAME:
+        ${{ needs.http-api-mock.outputs.responsesTableName }}
+      HTTP_API_MOCK_REQUESTS_TABLE_NAME:
+        ${{ needs.http-api-mock.outputs.requestsTableName }}
+      HTTP_API_MOCK_API_URL: ${{ needs.http-api-mock.outputs.apiURL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: store checkout out version
+        id: ref
+        run: echo "ref=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # The role is set up via https://github.com/hello-nrfcloud/ci
+          # secrets.AWS_ACCOUNT_ID_CI is an organization secret
+          role-to-assume: |
+            arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_CI }}:role/${{ github.repository_owner }}-ci-${{ github.event.repository.name }}
+          # vars.AWS_REGION_CI is an organization variable
+          aws-region: ${{ vars.AWS_REGION_CI }}
+
+      - name: Use HTTP API mock
+        run: |
+          ./cli.sh configure-nrfcloud-account apiEndpoint ${{ env.HTTP_API_MOCK_API_URL }}api.nrfcloud.com/
+          ./cli.sh configure-nrfcloud-account apiKey apiKey_Nordic
+
+      - name: Deploy solution stack
+        env:
+          IS_TEST: 1
+        run: npx cdk deploy --all --require-approval never
+
+      - name: Run End-to-End Tests
+        run: npm run test:e2e
+
+      - name: Print failed End-to-End tests
+        if: failure()
+        run:
+          cat e2e-test-result.json | npx tsx --no-warnings
+          ./feature-runner/console-reporter.ts  --only-failed --with-timestamps
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-test-result
+          path: e2e-test-result.json
+
+      - name: Get logs
+        if: failure()
+        run: ./cli.sh logs -f ERROR
+
+      - name: Trigger cleanup workflow
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run cleanup.yaml --ref ${{ github.ref_name }} \
+            -F stackName=${{ env.STACK_NAME }} \
+            -F openssl_lambda_tag=${{ needs.openssl-lambda-container.outputs.tag }} \
+            -F http_api_mock_stack_name=${{ needs.http-api-mock.outputs.stackName }}
+
+  release:
+    needs:
+      - e2e-tests
+      - openssl-lambda-container
+
+    runs-on: ubuntu-22.04
+
+    if: github.ref == 'refs/heads/saga'
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.e2e-tests.outputs.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit
+
+      - name: Semantic release
+        id: semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Determine released version
+        id: version
+        run: |
+          VERSION=`git describe --abbrev=0 --tags --always | tr -d '\n'`
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Log in to the Container registry
+        if: github.ref == 'refs/heads/saga'
+        uses: docker/login-action@5f4866a30a54f16a52d2ecb4a3898e9e424939cf
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: docker image ls
+
+      # The Docker images that were used successfully in this test run are shared
+      # on the projects' container registry. The deploy workflow will pull them and
+      # use copy them to the product instance's container registry.
+      # This ensures that exactly the container that was verified to work is used
+      # in production.
+      - name: Tag docker images with release version
+        if: github.ref == 'refs/heads/saga'
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ github.repository }}/openssl-lambda:${{ needs.openssl-lambda-container.outputs.tag }}
+          docker tag ${{ env.REGISTRY }}/${{ github.repository }}/openssl-lambda:${{ needs.openssl-lambda-container.outputs.tag }} ${{ env.REGISTRY }}/${{ github.repository }}/openssl-lambda:${{ steps.version.outputs.version }}
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}/openssl-lambda:${{ steps.version.outputs.version }}
+
+      - name: Trigger deployment workflow
+        if: steps.semantic-release.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run deploy.yaml \
+            -F ref=${{ needs.e2e-tests.outputs.ref }} \
+            -F openssl_lambda_tag=${{ needs.openssl-lambda-container.outputs.tag }}
