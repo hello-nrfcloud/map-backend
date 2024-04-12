@@ -13,6 +13,7 @@ import { IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import { mock as httpApiMock } from '@bifravst/http-api-mock/mock'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { slashless } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 
 /**
  * This file configures the BDD Feature runner
@@ -96,10 +97,7 @@ runner
 	)
 
 const res = await runner.run({
-	shareDeviceAPI: new URL(backendConfig.shareAPIURL),
-	confirmOwnershipAPI: new URL(backendConfig.confirmOwnershipAPIURL),
-	sharingStatusAPI: new URL(backendConfig.sharingStatusAPIURL),
-	devicesAPI: new URL(backendConfig.devicesAPIURL),
+	API: slashless(new URL(backendConfig.APIURL)),
 	describeOOBDeviceAPI: new URL(
 		`${mockApiEndpoint}${describeOOBDeviceAPIBasePath}`,
 	),

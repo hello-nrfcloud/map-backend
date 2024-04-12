@@ -20,6 +20,7 @@ import { SenMLMessages } from '../resources/SenMLMessage.js'
 import { ContainerRepositoryId } from '../../aws/ecr.js'
 import { repositoryName } from '@bifravst/aws-cdk-ecr-helpers/repository'
 import { ContinuousDeployment } from '@bifravst/ci'
+import { API } from '../resources/api/API.js'
 
 /**
  * Provides resources for the backend serving data to hello.nrfcloud.com/map
@@ -76,22 +77,29 @@ export class BackendStack extends Stack {
 			lambdaSources,
 		})
 
+		const api = new API(this)
+
 		const shareAPI = new ShareAPI(this, {
 			baseLayer,
 			lambdaSources,
 			publicDevices,
 		})
+		api.addRoute('POST /share', shareAPI.shareFn)
+		api.addRoute('POST /share/confirm', shareAPI.confirmOwnershipFn)
+		api.addRoute('GET /device/{id}', shareAPI.sharingStatusFn)
 
 		const devicesAPI = new DevicesAPI(this, {
 			baseLayer,
 			lambdaSources,
 			publicDevices,
 		})
+		api.addRoute('GET /devices', devicesAPI.devicesFn)
 
 		const lwm2mObjectHistory = new LwM2MObjectsHistory(this, {
 			baseLayer,
 			lambdaSources,
 		})
+		api.addRoute('GET /history', lwm2mObjectHistory.historyFn)
 
 		const customDevicesAPI = new CustomDevicesAPI(this, {
 			baseLayer,
@@ -110,41 +118,18 @@ export class BackendStack extends Stack {
 			publicDevices,
 		})
 
+		api.addRoute('PUT /credentials', customDevicesAPI.createCredentials)
+
 		const cd = new ContinuousDeployment(this, {
 			repository,
 			gitHubOICDProviderArn,
 		})
 
 		// Outputs
-		new CfnOutput(this, 'shareAPIURL', {
-			exportName: `${this.stackName}:shareAPI`,
-			description: 'API endpoint for sharing devices',
-			value: shareAPI.shareURL.url,
-		})
-		new CfnOutput(this, 'confirmOwnershipAPIURL', {
-			exportName: `${this.stackName}:confirmOwnershipAPI`,
-			description: 'API endpoint for confirming ownership',
-			value: shareAPI.confirmOwnershipURL.url,
-		})
-		new CfnOutput(this, 'sharingStatusAPIURL', {
-			exportName: `${this.stackName}:sharingStatusAPI`,
-			description: 'API endpoint for checking the sharing status of a device',
-			value: shareAPI.sharingStatusURL.url,
-		})
-		new CfnOutput(this, 'devicesAPIURL', {
-			exportName: `${this.stackName}:devicesAPI`,
-			description: 'API endpoint for retrieving public device information',
-			value: devicesAPI.devicesURL.url,
-		})
-		new CfnOutput(this, 'queryHistoryAPIURL', {
-			exportName: `${this.stackName}:queryHistoryAPI`,
-			description: 'API endpoint for querying device history',
-			value: lwm2mObjectHistory.historyURL.url,
-		})
-		new CfnOutput(this, 'createCredentialsAPIURL', {
-			exportName: `${this.stackName}:createCredentialsAPIURL`,
-			description: 'API endpoint for creating credentials for custom devices',
-			value: customDevicesAPI.createCredentialsURL.url,
+		new CfnOutput(this, 'APIURL', {
+			exportName: `${this.stackName}:APIURL`,
+			description: 'API endpoint',
+			value: api.URL,
 		})
 		new CfnOutput(this, 'publicDevicesTableName', {
 			exportName: `${this.stackName}:publicDevicesTableName`,
@@ -160,12 +145,7 @@ export class BackendStack extends Stack {
 }
 
 export type StackOutputs = {
-	shareAPIURL: string // e.g. 'https://iiet67bnlmbtuhiblik4wcy4ni0oujot.lambda-url.eu-west-1.on.aws/'
-	confirmOwnershipAPIURL: string // e.g. 'https://aqt7qs3nzyo4uh2v74quysvmxe0ubeth.lambda-url.eu-west-1.on.aws/'
-	sharingStatusAPIURL: string // e.g. 'https://aqt7qs3nzyo4uh2v74quysvmxe0ubeth.lambda-url.eu-west-1.on.aws/'
-	devicesAPIURL: string // e.g. 'https://a2udxgawcxd5tbmmfagi726jsm0obxov.lambda-url.eu-west-1.on.aws/'
-	queryHistoryAPIURL: string
-	createCredentialsAPIURL: string
+	APIURL: string // e.g. 'https://iiet67bnlmbtuhiblik4wcy4ni0oujot.execute-api.eu-west-1.amazonaws.com/2024-04-12/'
 	publicDevicesTableName: string
 	/**
 	 * Role ARN to use in the deploy GitHub Actions Workflow

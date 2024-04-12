@@ -12,7 +12,8 @@ import { STACK_NAME } from '../stacks/stackConfig.js'
 import type { PublicDevices } from './PublicDevices.js'
 
 export class CustomDevicesAPI extends Construct {
-	public readonly createCredentialsURL: Lambda.FunctionUrl
+	public readonly createCredentials: Lambda.IFunction
+
 	constructor(
 		parent: Construct,
 		{
@@ -50,7 +51,7 @@ export class CustomDevicesAPI extends Construct {
 			...new LambdaLogGroup(this, 'openSSLFnLogs'),
 		})
 
-		const createCredentials = new Lambda.Function(this, 'createCredentialsFn', {
+		this.createCredentials = new Lambda.Function(this, 'createCredentialsFn', {
 			handler: lambdaSources.createCredentials.handler,
 			architecture: Lambda.Architecture.ARM_64,
 			runtime: Lambda.Runtime.NODEJS_20_X,
@@ -69,10 +70,7 @@ export class CustomDevicesAPI extends Construct {
 			...new LambdaLogGroup(this, 'createCredentialsFnLogs'),
 			initialPolicy: [SettingsPermissions(Stack.of(this))],
 		})
-		this.createCredentialsURL = createCredentials.addFunctionUrl({
-			authType: Lambda.FunctionUrlAuthType.NONE,
-		})
-		openSSLFn.grantInvoke(createCredentials)
-		publicDevices.publicDevicesTable.grantReadData(createCredentials)
+		openSSLFn.grantInvoke(this.createCredentials)
+		publicDevices.publicDevicesTable.grantReadData(this.createCredentials)
 	}
 }

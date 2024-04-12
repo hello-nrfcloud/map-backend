@@ -5,7 +5,8 @@ import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import type { BackendLambdas } from '../BackendLambdas.js'
 
 export class DevicesAPI extends Construct {
-	public readonly devicesURL: Lambda.FunctionUrl
+	public readonly devicesFn: Lambda.IFunction
+
 	constructor(
 		parent: Construct,
 		{
@@ -20,7 +21,7 @@ export class DevicesAPI extends Construct {
 	) {
 		super(parent, 'devicesAPI')
 
-		const devicesFn = new Lambda.Function(this, 'devicesFn', {
+		this.devicesFn = new Lambda.Function(this, 'devicesFn', {
 			handler: lambdaSources.devicesData.handler,
 			architecture: Lambda.Architecture.ARM_64,
 			runtime: Lambda.Runtime.NODEJS_20_X,
@@ -45,9 +46,6 @@ export class DevicesAPI extends Construct {
 				}),
 			],
 		})
-		publicDevices.publicDevicesTable.grantReadData(devicesFn)
-		this.devicesURL = devicesFn.addFunctionUrl({
-			authType: Lambda.FunctionUrlAuthType.NONE,
-		})
+		publicDevices.publicDevicesTable.grantReadData(this.devicesFn)
 	}
 }

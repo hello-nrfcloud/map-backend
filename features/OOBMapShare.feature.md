@@ -4,10 +4,7 @@ exampleContext:
   deviceId: oob-352656108602296
   publicDeviceId: outfling-swanherd-attaghan
   describeOOBDeviceAPI: "https://oob-device.lambda-url.eu-west-1.on.aws/"
-  shareDeviceAPI: "https://share-device.lambda-url.eu-west-1.on.aws/"
-  confirmOwnershipAPI: "https://confirm-ownership.lambda-url.eu-west-1.on.aws/"
-  sharingStatusAPI: "https://sharing-status.lambda-url.eu-west-1.on.aws/"
-  devicesAPI: "https://confirm-ownership.lambda-url.eu-west-1.on.aws/"
+  API: "https://iiet67bnlmbtuhiblik4wcy4ni0oujot.execute-api.eu-west-1.amazonaws.com/2024-04-12"
   ts: 1694503339523
   tsISO: 2023-09-12T00:00:00.000Z
 ---
@@ -57,7 +54,7 @@ And I store `model` of the last response into `model`
 
 > Using the device ID I can share the device
 
-When I `POST` to `${shareDeviceAPI}` with
+When I `POST` to `${API}/share` with
 
 ```json
 {
@@ -74,7 +71,7 @@ And I store `id` of the last response into `publicDeviceId`
 
 ## Confirm the email
 
-When I `POST` to `${confirmOwnershipAPI}` with
+When I `POST` to `${API}/share/confirm` with
 
 ```json
 {
@@ -117,7 +114,7 @@ And the device `${deviceId}` publishes this message to the topic
 > The public id will be shown on the map, and users can also provide a list of
 > public ids to select a set of devices they are interested in
 
-When I `GET` `${devicesAPI}?ids=${publicDeviceId}`
+When I `GET` `${API}/devices?ids=${publicDeviceId}`
 
 Then I should receive a `https://github.com/hello-nrfcloud/proto-map/devices`
 response
@@ -145,7 +142,7 @@ And `$.devices[id="${publicDeviceId}"]` of the last response should match
 
 > Users should be able to determine whether a certain device is sharing data
 
-When I `GET` to `${sharingStatusAPI}?id=${deviceId}`
+When I `GET` to `${API}/device/${deviceId}`
 
 Then I should receive a `https://github.com/hello-nrfcloud/proto-map/device`
 response

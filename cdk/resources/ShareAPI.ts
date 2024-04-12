@@ -10,9 +10,9 @@ import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import type { BackendLambdas } from '../BackendLambdas.js'
 
 export class ShareAPI extends Construct {
-	public readonly shareURL: Lambda.FunctionUrl
-	public readonly confirmOwnershipURL: Lambda.FunctionUrl
-	public readonly sharingStatusURL: Lambda.FunctionUrl
+	public readonly shareFn: Lambda.IFunction
+	public readonly confirmOwnershipFn: Lambda.IFunction
+	public readonly sharingStatusFn: Lambda.IFunction
 	constructor(
 		parent: Construct,
 		{
@@ -32,7 +32,7 @@ export class ShareAPI extends Construct {
 
 		const domain = this.node.getContext('domain')
 
-		const shareFn = new Lambda.Function(this, 'shareFn', {
+		this.shareFn = new Lambda.Function(this, 'shareFn', {
 			handler: lambdaSources.shareDevice.handler,
 			architecture: Lambda.Architecture.ARM_64,
 			runtime: Lambda.Runtime.NODEJS_20_X,
@@ -65,12 +65,9 @@ export class ShareAPI extends Construct {
 				}),
 			],
 		})
-		publicDevices.publicDevicesTable.grantWriteData(shareFn)
-		this.shareURL = shareFn.addFunctionUrl({
-			authType: Lambda.FunctionUrlAuthType.NONE,
-		})
+		publicDevices.publicDevicesTable.grantWriteData(this.shareFn)
 
-		const confirmOwnershipFn = new Lambda.Function(this, 'confirmOwnershipFn', {
+		this.confirmOwnershipFn = new Lambda.Function(this, 'confirmOwnershipFn', {
 			handler: lambdaSources.confirmOwnership.handler,
 			architecture: Lambda.Architecture.ARM_64,
 			runtime: Lambda.Runtime.NODEJS_20_X,
@@ -87,12 +84,9 @@ export class ShareAPI extends Construct {
 			},
 			...new LambdaLogGroup(this, 'confirmOwnershipFnLogs'),
 		})
-		publicDevices.publicDevicesTable.grantReadWriteData(confirmOwnershipFn)
-		this.confirmOwnershipURL = confirmOwnershipFn.addFunctionUrl({
-			authType: Lambda.FunctionUrlAuthType.NONE,
-		})
+		publicDevices.publicDevicesTable.grantReadWriteData(this.confirmOwnershipFn)
 
-		const sharingStatusFn = new Lambda.Function(this, 'sharingStatusFn', {
+		this.sharingStatusFn = new Lambda.Function(this, 'sharingStatusFn', {
 			handler: lambdaSources.sharingStatus.handler,
 			architecture: Lambda.Architecture.ARM_64,
 			runtime: Lambda.Runtime.NODEJS_20_X,
@@ -108,9 +102,6 @@ export class ShareAPI extends Construct {
 			},
 			...new LambdaLogGroup(this, 'sharingStatusFnLogs'),
 		})
-		publicDevices.publicDevicesTable.grantReadData(sharingStatusFn)
-		this.sharingStatusURL = sharingStatusFn.addFunctionUrl({
-			authType: Lambda.FunctionUrlAuthType.NONE,
-		})
+		publicDevices.publicDevicesTable.grantReadData(this.sharingStatusFn)
 	}
 }

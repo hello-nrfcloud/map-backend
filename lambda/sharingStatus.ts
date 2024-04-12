@@ -37,7 +37,7 @@ const h = async (
 ): Promise<APIGatewayProxyResultV2> => {
 	console.log(JSON.stringify({ event }))
 
-	const maybeValidQuery = validateInput(event.queryStringParameters)
+	const maybeValidQuery = validateInput(event.pathParameters)
 
 	if ('errors' in maybeValidQuery) {
 		return aProblem({

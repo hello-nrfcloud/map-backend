@@ -18,8 +18,9 @@ import type { BackendLambdas } from '../BackendLambdas.js'
  * Store history of LwM2M objects
  */
 export class LwM2MObjectsHistory extends Construct {
+	public readonly historyFn: Lambda.IFunction
+
 	public readonly table: Timestream.CfnTable
-	public readonly historyURL: Lambda.FunctionUrl
 	public constructor(
 		parent: Construct,
 		{
@@ -131,7 +132,7 @@ export class LwM2MObjectsHistory extends Construct {
 			sourceArn: rule.attrArn,
 		})
 
-		const historyFn = new Lambda.Function(this, 'historyFn', {
+		this.historyFn = new Lambda.Function(this, 'historyFn', {
 			handler: lambdaSources.queryHistory.handler,
 			architecture: Lambda.Architecture.ARM_64,
 			runtime: Lambda.Runtime.NODEJS_20_X,
@@ -165,9 +166,6 @@ export class LwM2MObjectsHistory extends Construct {
 					],
 				}),
 			],
-		})
-		this.historyURL = historyFn.addFunctionUrl({
-			authType: Lambda.FunctionUrlAuthType.NONE,
 		})
 	}
 }
