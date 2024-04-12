@@ -25,25 +25,46 @@ Provide your AWS credentials, for example using the `.envrc` (see
 npm ci
 ```
 
+#### nRF Cloud Location Services Service Key
+
+The single-cell geo-location features uses the nRF Cloud
+[Ground Fix API](https://api.nrfcloud.com/v1#tag/Ground-Fix) which requires the
+service to be enabled in the account's plan. Manage the account at
+<https://nrfcloud.com/#/manage-plan>.
+
+Provide your nRF Cloud API key:
+
+```bash
+./cli.sh configure-nrfcloud-account apiKey <API key>
+```
+
+### Build the docker images
+
+Some of the feature are run from docker containers, ensure they have been built
+and published before deploying the solutions.
+
+```bash
+export OPENSSL_LAMBDA_CONTAINER_TAG=$(./cli.sh build-container openssl-lambda)
+
+# You can add these outputs to your .env file
+echo OPENSSL_LAMBDA_CONTAINER_TAG=$OPENSSL_LAMBDA_CONTAINER_TAG
+```
+
 ### Deploy
 
 ```bash
 npx cdk bootstrap # if this is the first time you use CDK in this account
-npx cdk deploy --all
+npx cdk deploy
 ```
 
-## Continuous Integration
+## Continuous Deployment using GitHub Actions
 
-To run continuous integration tests, deploy the CI application **in a seperate
-account**:
+After deploying the stack manually once,
 
-```bash
-npx cdk --app 'npx tsx --no-warnings cdk/ci.ts' deploy
-```
+- configure a GitHub Actions environment named `production`
+- create the secret `AWS_ROLE` with the value
+  `arn:aws:iam::<account ID>:role/<stack name>-cd` and a variable (use the
+  `cdRoleArn` stack output)
+- create the variable `AWS_REGION` with the value `<region>` (your region)
 
-and provide the Role ARN to GitHub Actions:
-
-```bash
-CI_ROLE=`aws cloudformation describe-stacks --stack-name ${STACK_NAME:-hello-nrfcloud-map-backend}-ci | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "ciRoleArn") | .OutputValue'`
-gh secret set AWS_ROLE --env ci --body $CI_ROLE
-```
+to enable continuous deployment.
