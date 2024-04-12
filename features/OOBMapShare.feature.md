@@ -1,9 +1,7 @@
 ---
 exampleContext:
-  fingerprint: 92b.y7i24q
   deviceId: oob-352656108602296
   publicDeviceId: outfling-swanherd-attaghan
-  describeOOBDeviceAPI: "https://oob-device.lambda-url.eu-west-1.on.aws/"
   API: "https://iiet67bnlmbtuhiblik4wcy4ni0oujot.execute-api.eu-west-1.amazonaws.com/2024-04-12"
   ts: 1694503339523
   tsISO: 2023-09-12T00:00:00.000Z
@@ -15,40 +13,18 @@ exampleContext:
 > compared with other devices and can be observed by users without needing to
 > know the fingerprint.
 >
-> Note: Users need to know the fingerprint of the device in order to prevent
-> them sharing devices they don't have access to by guessing the IMEI.
->
 > This works for the Thingy:91 X because they have credentials that already tie
 > them to the nRF Cloud account that is used by `hello.nrfcloud.com/map`. The
 > only thing the user needs to do is to consent to the sharing.
 
 ## Background
 
-Given I have the fingerprint for my device in `fingerprint`
+> The `deviceId` and `model` is provided in a link from the device page on
+> `hello.nrfcloud.com`.
+
+Given I have a random device ID in `deviceId`
 
 And I have a random email in `email`
-
-## Get the device ID from `hello.nrfcloud.com`
-
-> Query the `hello.nrfcloud.com` backend to retrieve the device ID using the
-> fingerprint
-
-When I `GET` to `${describeOOBDeviceAPI}?fingerprint=${fingerprint}`
-
-Then I should receive a `https://github.com/hello-nrfcloud/proto/deviceIdentity`
-response
-
-And the last response should match
-
-```json
-{
-  "model": "PCA20035+solar"
-}
-```
-
-And I store `id` of the last response into `deviceId`
-
-And I store `model` of the last response into `model`
 
 ## Share the device
 
@@ -59,7 +35,7 @@ When I `POST` to `${API}/share` with
 ```json
 {
   "deviceId": "${deviceId}",
-  "model": "${model}",
+  "model": "PCA20035+solar",
   "email": "${email}"
 }
 ```
