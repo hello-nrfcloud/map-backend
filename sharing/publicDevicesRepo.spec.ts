@@ -1,6 +1,6 @@
 import { describe, it, mock } from 'node:test'
 import assert from 'node:assert/strict'
-import { publicDevicesRepo } from './publicDevicesRepo.js'
+import { getDeviceById, publicDevicesRepo } from './publicDevicesRepo.js'
 import { marshall } from '@aws-sdk/util-dynamodb'
 import { assertCall } from '../util/test/assertCall.js'
 import { randomUUID } from 'node:crypto'
@@ -150,6 +150,66 @@ void describe('publicDevicesRepo()', () => {
 					ReturnValues: 'ALL_NEW',
 				},
 			})
+		})
+	})
+})
+
+void describe('getDeviceById()', () => {
+	void it(`it should return a device by it's public ID`, async () => {
+		const id = randomUUID()
+		const send = mock.fn(async () =>
+			Promise.resolve({
+				Items: [
+					marshall({
+						id,
+						secret__deviceId: 'some-device',
+					}),
+				],
+			}),
+		)
+		const getByDeviceId = mock.fn(async () =>
+			Promise.resolve({
+				publicDevice: {
+					id,
+					model: 'asset_tracker_v2+AWS',
+				},
+			}),
+		)
+
+		const res = await getDeviceById({
+			db: {
+				send,
+			} as any,
+			TableName: 'some-table',
+			idIndex: 'id-index',
+			getByDeviceId: getByDeviceId as any,
+		})(id)
+
+		assertCall(send, {
+			input: {
+				TableName: 'some-table',
+				IndexName: 'id-index',
+				KeyConditionExpression: '#id = :id',
+				ExpressionAttributeNames: {
+					'#id': 'id',
+					'#deviceId': 'secret__deviceId',
+				},
+				ExpressionAttributeValues: {
+					':id': {
+						S: id,
+					},
+				},
+				ProjectionExpression: '#id, #deviceId',
+			},
+		})
+
+		assert.deepEqual(getByDeviceId.mock.calls[0]?.arguments, ['some-device'])
+
+		assert.deepEqual(res, {
+			publicDevice: {
+				id,
+				model: 'asset_tracker_v2+AWS',
+			},
 		})
 	})
 })

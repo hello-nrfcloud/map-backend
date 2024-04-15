@@ -93,6 +93,8 @@ runner
 				responsesTable: responsesTableName,
 			}),
 			helloAPIBasePath,
+			db,
+			publicDevicesTableName: backendConfig.publicDevicesTableName,
 		}),
 	)
 
