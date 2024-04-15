@@ -33,7 +33,7 @@
     "@aws-sdk/client-ecr": "3.554.0",
     "@aws-sdk/client-iot-data-plane": "3.554.0",
     "@bifravst/aws-cdk-ecr-helpers": "1.2.0",
-    "@bifravst/aws-cdk-lambda-helpers": "1.4.0",
+    "@bifravst/aws-cdk-lambda-helpers": "1.4.1",
     "@bifravst/ci": "2.0.1",
     "@bifravst/eslint-config-typescript": "6.0.22",
     "@bifravst/http-api-mock": "1.2.3",
@@ -44,7 +44,7 @@
     "@nordicsemiconductor/bdd-markdown": "8.0.16",
     "@nordicsemiconductor/cloudformation-helpers": "9.0.3",
     "@swc/cli": "0.3.12",
-    "@swc/core": "1.4.13",
+    "@swc/core": "1.4.14",
     "@types/aws-lambda": "8.10.137",
     "@types/lodash-es": "4.17.12",
     "aws-cdk": "2.137.0",
@@ -103,12 +103,14 @@
     "@hello.nrfcloud.com/lambda-helpers": "1.0.2",
     "@hello.nrfcloud.com/nrfcloud-api-helpers": "1.5.0",
     "@hello.nrfcloud.com/proto": "6.5.2",
-    "@hello.nrfcloud.com/proto-map": "5.2.2",
+    "@hello.nrfcloud.com/proto-map": "5.3.0",
     "@middy/core": "5.3.2",
     "@nordicsemiconductor/from-env": "3.0.1",
     "@nordicsemiconductor/random-words": "8.0.1",
     "@nordicsemiconductor/timestream-helpers": "6.0.2",
     "@sinclair/typebox": "0.32.20",
-    "lodash-es": "4.17.21"
+    "id128": "1.6.6",
+    "lodash-es": "4.17.21",
+    "p-retry": "6.2.0"
   }
 }

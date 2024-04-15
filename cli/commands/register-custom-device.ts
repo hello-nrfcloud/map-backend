@@ -48,19 +48,11 @@ export const registerCustomMapDevice = ({
 			deviceId,
 			model,
 			email,
-			generateToken: () => '123456',
+			confirmed: true,
 		})
 		if ('error' in maybePublished) {
 			console.error(maybePublished.error)
 			throw new Error(`Failed to register custom device.`)
-		}
-		const maybeConfirmed = await publicDevice.confirmOwnership({
-			deviceId,
-			ownershipConfirmationToken: '123456',
-		})
-		if ('error' in maybeConfirmed) {
-			console.error(maybeConfirmed.error)
-			throw new Error(`Failed to confirm custom device.`)
 		}
 
 		const certDir = path.join(

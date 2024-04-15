@@ -12,4 +12,5 @@ type BackendLambdas = {
 	createCredentials: PackedLambda
 	openSSL: PackedLambda
 	senMLToLwM2M: PackedLambda
+	senMLImportLogs: PackedLambda
 }

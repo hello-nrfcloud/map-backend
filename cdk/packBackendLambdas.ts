@@ -17,4 +17,5 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	createCredentials: await pack('createCredentials'),
 	openSSL: await pack('openSSL'),
 	senMLToLwM2M: await pack('senMLToLwM2M'),
+	senMLImportLogs: await pack('senMLImportLogs'),
 })

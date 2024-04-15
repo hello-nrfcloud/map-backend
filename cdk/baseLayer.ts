@@ -16,6 +16,8 @@ const dependencies: Array<keyof (typeof pJson)['dependencies']> = [
 	'@aws-lambda-powertools/metrics',
 	'@hello.nrfcloud.com/nrfcloud-api-helpers',
 	'@hello.nrfcloud.com/lambda-helpers',
+	'id128',
+	'p-retry',
 ]
 
 export const pack = async (): Promise<PackedLayer> =>

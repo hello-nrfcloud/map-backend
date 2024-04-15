@@ -72,6 +72,8 @@ export const publicDevicesRepo = ({
 		model: string
 		email: string
 		generateToken?: () => string
+		// Mark device as confirmed. Can only be used if email address is `...@nordicsemi.no`.
+		confirmed?: true
 	}) => Promise<
 		| {
 				error: Error
@@ -133,29 +135,46 @@ export const publicDevicesRepo = ({
 				},
 			}
 		},
-		share: async ({ deviceId, model, email, generateToken }) => {
+		share: async ({ deviceId, model, email, generateToken, confirmed }) => {
 			const id = randomWords({ numWords: 3 }).join('-')
 			const ownershipConfirmationToken = (
 				generateToken?.() ?? generateCode()
 			).toUpperCase()
 
+			if (confirmed === true && !email.endsWith('@nordicsemi.no')) {
+				throw new Error(
+					`Only devices owned by @nordicsemi.no can be shared without confirmation!`,
+				)
+			}
+
 			try {
 				await db.send(
 					new PutItemCommand({
 						TableName,
-						Item: marshall({
-							secret__deviceId: deviceId.toLowerCase(),
-							id,
-							ttl:
-								Math.round((now ?? new Date()).getTime() / 1000) +
-								consentDurationSeconds,
-							model,
-							ownerEmail: email,
-							ownershipConfirmationToken,
-							ownershipConfirmationTokenCreated: (
-								now ?? new Date()
-							).toISOString(),
-						}),
+						Item: marshall(
+							{
+								secret__deviceId: deviceId.toLowerCase(),
+								id,
+								ttl:
+									Math.round((now ?? new Date()).getTime() / 1000) +
+									consentDurationSeconds,
+								model,
+								ownerEmail: email,
+								...(confirmed === true
+									? {
+											ownerConfirmed: (now ?? new Date()).toISOString(),
+										}
+									: {
+											ownershipConfirmationToken,
+											ownershipConfirmationTokenCreated: (
+												now ?? new Date()
+											).toISOString(),
+										}),
+							},
+							{
+								removeUndefinedValues: true,
+							},
+						),
 						ConditionExpression: 'attribute_not_exists(secret__deviceId)',
 					}),
 				)

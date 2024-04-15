@@ -12,10 +12,19 @@ import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
 import { MetricUnit } from '@aws-lambda-powertools/metrics'
 import middy from '@middy/core'
 import { logMetrics } from '@aws-lambda-powertools/metrics/middleware'
+import {
+	CloudWatchLogsClient,
+	PutLogEventsCommand,
+	CreateLogStreamCommand,
+} from '@aws-sdk/client-cloudwatch-logs'
+import id128 from 'id128'
 
-const { TableName } = fromEnv({
+const { TableName, importLogGroupName } = fromEnv({
 	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	importLogGroupName: 'IMPORT_LOGGROUP_NAME',
 })(process.env)
+
+const logs = new CloudWatchLogsClient({})
 
 const updateShadow = updateLwM2MShadow(new IoTDataPlaneClient({}))
 
@@ -59,6 +68,15 @@ const h = async (event: {
 		return
 	}
 
+	const logStreamName = `${deviceInfo.id}-${id128.Ulid.generate().toCanonical()}`
+
+	await logs.send(
+		new CreateLogStreamCommand({
+			logGroupName: importLogGroupName,
+			logStreamName,
+		}),
+	)
+
 	// TODO: Limit number of messages per day
 
 	const maybeValidSenML = isValid(message)
@@ -66,12 +84,49 @@ const h = async (event: {
 		// TODO: persist errors so users can debug their payloads
 		console.error(JSON.stringify(maybeValidSenML.errors))
 		console.error(`Invalid SenML message`)
+		await logs.send(
+			new PutLogEventsCommand({
+				logGroupName: importLogGroupName,
+				logStreamName,
+				logEvents: [
+					{
+						timestamp: Date.now(),
+						message: JSON.stringify({
+							success: false,
+							id: deviceInfo.id,
+							error: 'Invalid SenML message',
+							detail: maybeValidSenML.errors,
+							senML: message,
+						}),
+					},
+				],
+			}),
+		)
 		return
 	}
 
 	const objects = senMLtoLwM2M(maybeValidSenML.value)
 
 	console.debug(`[${deviceId}]`, deviceInfo.model, objects)
+
+	await logs.send(
+		new PutLogEventsCommand({
+			logGroupName: importLogGroupName,
+			logStreamName,
+			logEvents: [
+				{
+					timestamp: Date.now(),
+					message: JSON.stringify({
+						success: true,
+						id: deviceInfo.id,
+						model: deviceInfo.model,
+						senML: message,
+						lwm2m: objects,
+					}),
+				},
+			],
+		}),
+	)
 
 	await updateShadow(deviceInfo.id, objects)
 }

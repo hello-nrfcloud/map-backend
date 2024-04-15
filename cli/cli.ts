@@ -17,6 +17,7 @@ import { configureNrfCloudAccount } from './commands/configure-nrfcloud-account.
 import { logsCommand } from './commands/logs.js'
 import { CloudWatchLogsClient } from '@aws-sdk/client-cloudwatch-logs'
 import { configureHello } from './commands/configure-hello.js'
+import { shareDevice } from './commands/share-device.js'
 
 const ssm = new SSMClient({})
 const db = new DynamoDBClient({})
@@ -71,6 +72,10 @@ const CLI = async ({ isCI }: { isCI: boolean }) => {
 					ssm,
 					env: accountEnv,
 					stackName: STACK_NAME,
+				}),
+				shareDevice({
+					db,
+					publicDevicesTableName: mapOutputs.publicDevicesTableName,
 				}),
 			)
 		} catch (error) {

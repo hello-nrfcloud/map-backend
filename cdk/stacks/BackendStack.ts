@@ -60,24 +60,28 @@ export class BackendStack extends Stack {
 
 		const publicDevices = new PublicDevices(this)
 
+		const api = new API(this)
+
 		new LwM2MShadow(this, {
 			baseLayer,
 			lambdaSources,
 			publicDevices,
 		})
 
-		new SenMLMessages(this, {
+		const senMLMessages = new SenMLMessages(this, {
 			baseLayer,
 			lambdaSources,
 			publicDevices,
 		})
+		api.addRoute(
+			'GET /device/{id}/senml-import-logs',
+			senMLMessages.importLogsFn,
+		)
 
 		new ConnectionInformationGeoLocation(this, {
 			baseLayer,
 			lambdaSources,
 		})
-
-		const api = new API(this)
 
 		const shareAPI = new ShareAPI(this, {
 			baseLayer,

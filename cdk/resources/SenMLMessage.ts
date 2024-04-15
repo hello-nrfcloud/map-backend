@@ -7,15 +7,20 @@ import {
 	aws_iam as IAM,
 	aws_iot as IoT,
 	aws_lambda as Lambda,
+	aws_logs as Logs,
+	RemovalPolicy,
+	Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import type { BackendLambdas } from '../BackendLambdas.js'
 import type { PublicDevices } from './PublicDevices.js'
+import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 
 /**
  * Handle incoming SenML messages
  */
 export class SenMLMessages extends Construct {
+	public readonly importLogsFn: Lambda.IFunction
 	constructor(
 		parent: Construct,
 		{
@@ -24,11 +29,18 @@ export class SenMLMessages extends Construct {
 			publicDevices,
 		}: {
 			baseLayer: Lambda.ILayerVersion
-			lambdaSources: Pick<BackendLambdas, 'senMLToLwM2M'>
+			lambdaSources: Pick<BackendLambdas, 'senMLToLwM2M' | 'senMLImportLogs'>
 			publicDevices: PublicDevices
 		},
 	) {
 		super(parent, 'senml-messages')
+
+		const importLogs = new Logs.LogGroup(this, 'importLogs', {
+			logGroupName: `${Stack.of(this).stackName}/senml-device-message-import`,
+			retention: RetentionDays.ONE_MONTH,
+			logGroupClass: Logs.LogGroupClass.INFREQUENT_ACCESS,
+			removalPolicy: RemovalPolicy.DESTROY,
+		})
 
 		const fn = new Lambda.Function(this, 'fn', {
 			handler: lambdaSources.senMLToLwM2M.handler,
@@ -43,6 +55,7 @@ export class SenMLMessages extends Construct {
 			environment: {
 				VERSION: this.node.getContext('version'),
 				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+				IMPORT_LOGGROUP_NAME: importLogs.logGroupName,
 			},
 			initialPolicy: [
 				new IAM.PolicyStatement({
@@ -53,6 +66,7 @@ export class SenMLMessages extends Construct {
 			...new LambdaLogGroup(this, 'fnLogs'),
 		})
 		publicDevices.publicDevicesTable.grantReadData(fn)
+		importLogs.grantWrite(fn)
 
 		const rule = new IoT.CfnTopicRule(this, 'rule', {
 			topicRulePayload: {
@@ -86,5 +100,28 @@ export class SenMLMessages extends Construct {
 			) as IAM.IPrincipal,
 			sourceArn: rule.attrArn,
 		})
+
+		this.importLogsFn = new Lambda.Function(this, 'importLogsFn', {
+			handler: lambdaSources.senMLImportLogs.handler,
+			architecture: Lambda.Architecture.ARM_64,
+			runtime: Lambda.Runtime.NODEJS_20_X,
+			timeout: Duration.minutes(1),
+			memorySize: 1792,
+			code: Lambda.Code.fromAsset(lambdaSources.senMLImportLogs.zipFile),
+			description: 'Returns the last import messages for a device.',
+			layers: [baseLayer],
+			environment: {
+				VERSION: this.node.getContext('version'),
+				IMPORT_LOGGROUP_NAME: importLogs.logGroupName,
+			},
+			...new LambdaLogGroup(this, 'importLogsFnLogs'),
+			initialPolicy: [
+				new IAM.PolicyStatement({
+					actions: ['logs:StartQuery', 'logs:GetQueryResults'],
+					resources: [importLogs.logGroupArn],
+				}),
+			],
+		})
+		importLogs.grantRead(this.importLogsFn)
 	}
 }
