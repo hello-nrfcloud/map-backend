@@ -17,10 +17,12 @@ export class ShareAPI extends Construct {
 	constructor(
 		parent: Construct,
 		{
+			domain,
 			baseLayer,
 			lambdaSources,
 			publicDevices,
 		}: {
+			domain: string
 			publicDevices: PublicDevices
 			baseLayer: Lambda.ILayerVersion
 			lambdaSources: Pick<
@@ -30,8 +32,6 @@ export class ShareAPI extends Construct {
 		},
 	) {
 		super(parent, 'shareAPI')
-
-		const domain = this.node.getContext('domain')
 
 		this.shareFn = new Lambda.Function(this, 'shareFn', {
 			handler: lambdaSources.shareDevice.handler,

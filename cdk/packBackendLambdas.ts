@@ -18,4 +18,5 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	openSSL: await pack('openSSL'),
 	senMLToLwM2M: await pack('senMLToLwM2M'),
 	senMLImportLogs: await pack('senMLImportLogs'),
+	apiHealthCheck: await pack('apiHealthCheck'),
 })

@@ -10,7 +10,10 @@ import {
 import { Context, Model } from '@hello.nrfcloud.com/proto-map/api'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import { Type } from '@sinclair/typebox'
-import lambda, { type APIGatewayProxyResultV2 } from 'aws-lambda'
+import {
+	type APIGatewayProxyEventV2,
+	type APIGatewayProxyResultV2,
+} from 'aws-lambda'
 import { randomUUID } from 'node:crypto'
 import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
 import { sendOwnershipVerificationEmail } from './sendOwnershipVerificationEmail.js'
@@ -79,7 +82,7 @@ const validateInput = validateWithTypeBox(
 )
 
 const h = async (
-	event: lambda.APIGatewayProxyEventV2,
+	event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
 	console.log(JSON.stringify(event))
 

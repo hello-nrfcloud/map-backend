@@ -57,6 +57,18 @@ npx cdk bootstrap # if this is the first time you use CDK in this account
 npx cdk deploy
 ```
 
+## Custom domain name
+
+You can specify a custom domain name for the deployed API using the environment
+variable `API_DOMAIN_NAME`.
+
+If you do so, make sure to create a certificate in the region for this domain
+name.
+
+After deploying the stack, make sure to set up a CNAME record for this domain
+that points to the hostname of the deployed API (available in the stack output
+`gatewayDomainName`).
+
 ## Continuous Deployment using GitHub Actions
 
 After deploying the stack manually once,

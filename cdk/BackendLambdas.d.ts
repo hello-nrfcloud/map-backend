@@ -13,4 +13,5 @@ type BackendLambdas = {
 	openSSL: PackedLambda
 	senMLToLwM2M: PackedLambda
 	senMLImportLogs: PackedLambda
+	apiHealthCheck: PackedLambda
 }

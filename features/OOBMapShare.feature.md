@@ -3,7 +3,7 @@ exampleContext:
   fingerprint: 92b.y7i24q
   deviceId: oob-352656108602296
   publicDeviceId: outfling-swanherd-attaghan
-  API: "https://iiet67bnlmbtuhiblik4wcy4ni0oujot.execute-api.eu-west-1.amazonaws.com/2024-04-12"
+  API: "https://api.nordicsemi.world/2024-04-12"
   ts: 1694503339523
   tsISO: 2023-09-12T00:00:00.000Z
 ---

@@ -1,9 +1,9 @@
-import { Construct } from 'constructs'
 import {
 	aws_apigatewayv2 as HttpApi,
 	aws_lambda as Lambda,
 	Stack,
 } from 'aws-cdk-lib'
+import { Construct } from 'constructs'
 import { ApiRoute } from './ApiRoute.js'
 
 export class API extends Construct {
@@ -15,6 +15,8 @@ export class API extends Construct {
 	constructor(parent: Construct) {
 		super(parent, 'api')
 
+		const stageName = '2024-04-15'
+
 		this.api = new HttpApi.CfnApi(this, 'api', {
 			name: 'hello.nrfcloud.com/map API',
 			protocolType: 'HTTP',
@@ -22,7 +24,7 @@ export class API extends Construct {
 
 		this.stage = new HttpApi.CfnStage(this, 'stage', {
 			apiId: this.api.ref,
-			stageName: '2024-04-12',
+			stageName,
 			autoDeploy: true,
 		})
 

@@ -5,22 +5,25 @@ import {
 	Stack,
 	aws_ecr as ECR,
 } from 'aws-cdk-lib'
-import type { BackendLambdas } from '../BackendLambdas.js'
+import type { BackendLambdas } from './BackendLambdas.js'
 import type { PackedLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
 import { LambdaSource } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import { ConnectionInformationGeoLocation } from '../resources/ConnectionInformationGeoLocation.js'
-import { LwM2MShadow } from '../resources/LwM2MShadow.js'
-import { PublicDevices } from '../resources/PublicDevices.js'
-import { ShareAPI } from '../resources/ShareAPI.js'
+import { ConnectionInformationGeoLocation } from './resources/ConnectionInformationGeoLocation.js'
+import { LwM2MShadow } from './resources/LwM2MShadow.js'
+import { PublicDevices } from './resources/PublicDevices.js'
+import { ShareAPI } from './resources/ShareAPI.js'
 import { STACK_NAME } from './stackConfig.js'
-import { DevicesAPI } from '../resources/DevicesAPI.js'
-import { LwM2MObjectsHistory } from '../resources/LwM2MObjectsHistory.js'
-import { CustomDevicesAPI } from '../resources/CustomDevicesAPI.js'
-import { SenMLMessages } from '../resources/SenMLMessage.js'
-import { ContainerRepositoryId } from '../../aws/ecr.js'
+import { DevicesAPI } from './resources/DevicesAPI.js'
+import { LwM2MObjectsHistory } from './resources/LwM2MObjectsHistory.js'
+import { CustomDevicesAPI } from './resources/CustomDevicesAPI.js'
+import { SenMLMessages } from './resources/SenMLMessage.js'
+import { ContainerRepositoryId } from '../aws/ecr.js'
 import { repositoryName } from '@bifravst/aws-cdk-ecr-helpers/repository'
 import { ContinuousDeployment } from '@bifravst/ci'
-import { API } from '../resources/api/API.js'
+import { API } from './resources/api/API.js'
+import type { DomainCert } from '../aws/acm.js'
+import { ApiHealthCheck } from './resources/api/HealthCheck.js'
+import { CustomDomain } from './resources/api/CustomDomain.js'
 
 /**
  * Provides resources for the backend serving data to hello.nrfcloud.com/map
@@ -29,12 +32,16 @@ export class BackendStack extends Stack {
 	constructor(
 		parent: App,
 		{
+			domain,
+			apiDomain,
 			layer,
 			lambdaSources,
 			openSSLLambdaContainerTag,
 			repository,
 			gitHubOICDProviderArn,
 		}: {
+			domain: string
+			apiDomain?: DomainCert
 			layer: PackedLayer
 			lambdaSources: BackendLambdas
 			openSSLLambdaContainerTag: string
@@ -59,8 +66,41 @@ export class BackendStack extends Stack {
 		})
 
 		const publicDevices = new PublicDevices(this)
+		new CfnOutput(this, 'publicDevicesTableName', {
+			exportName: `${this.stackName}:publicDevicesTableName`,
+			description: 'name of the public devices table',
+			value: publicDevices.publicDevicesTable.tableName,
+		})
 
 		const api = new API(this)
+		api.addRoute(
+			'GET /health',
+			new ApiHealthCheck(this, { baseLayer, lambdaSources }).fn,
+		)
+
+		if (apiDomain === undefined) {
+			new CfnOutput(this, 'APIURL', {
+				exportName: `${this.stackName}:APIURL`,
+				description: 'API endpoint',
+				value: api.URL,
+			})
+		} else {
+			const domain = new CustomDomain(this, {
+				api,
+				apiDomain,
+			})
+			new CfnOutput(this, 'gatewayDomainName', {
+				exportName: `${this.stackName}:gatewayDomainName`,
+				description:
+					'The domain name associated with the regional endpoint for the custom domain name. Use this as the target for the CNAME record for your custom domain name.',
+				value: domain.gatewayDomainName.toString(),
+			})
+			new CfnOutput(this, 'APIURL', {
+				exportName: `${this.stackName}:APIURL`,
+				description: 'API endpoint',
+				value: domain.URL,
+			})
+		}
 
 		new LwM2MShadow(this, {
 			baseLayer,
@@ -84,6 +124,7 @@ export class BackendStack extends Stack {
 		})
 
 		const shareAPI = new ShareAPI(this, {
+			domain,
 			baseLayer,
 			lambdaSources,
 			publicDevices,
@@ -124,21 +165,11 @@ export class BackendStack extends Stack {
 
 		api.addRoute('POST /credentials', customDevicesAPI.createCredentials)
 
+		// CD
+
 		const cd = new ContinuousDeployment(this, {
 			repository,
 			gitHubOICDProviderArn,
-		})
-
-		// Outputs
-		new CfnOutput(this, 'APIURL', {
-			exportName: `${this.stackName}:APIURL`,
-			description: 'API endpoint',
-			value: api.URL,
-		})
-		new CfnOutput(this, 'publicDevicesTableName', {
-			exportName: `${this.stackName}:publicDevicesTableName`,
-			description: 'name of the public devices table',
-			value: publicDevices.publicDevicesTable.tableName,
 		})
 		new CfnOutput(this, 'cdRoleArn', {
 			exportName: `${this.stackName}:cdRoleArn`,
@@ -149,7 +180,20 @@ export class BackendStack extends Stack {
 }
 
 export type StackOutputs = {
-	APIURL: string // e.g. 'https://iiet67bnlmbtuhiblik4wcy4ni0oujot.execute-api.eu-west-1.amazonaws.com/2024-04-12/'
+	/**
+	 * The URL of the deployed API
+	 * @example https://api.nordicsemi.world/2024-04-12/
+	 * @example https://9gsm5gind2.execute-api.eu-west-1.amazonaws.com/2024-04-12
+	 */
+	APIURL: string
+	/**
+	 * The domain name associated with the regional endpoint for the custom domain name. Use this as the target for the CNAME record for your custom domain name.
+	 *
+	 * Only present if custom domain is used
+	 *
+	 * @example d-nygno3o155.execute-api.eu-west-1.amazonaws.com
+	 */
+	gatewayDomainName?: string
 	publicDevicesTableName: string
 	/**
 	 * Role ARN to use in the deploy GitHub Actions Workflow

@@ -1,19 +1,21 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { fromEnv } from '@nordicsemiconductor/from-env'
-import lambda, { type APIGatewayProxyResultV2 } from 'aws-lambda'
-import { Type } from '@sinclair/typebox'
-import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
-import { Context } from '@hello.nrfcloud.com/proto-map/api'
-import { DeviceId } from '@hello.nrfcloud.com/proto-map/api'
+import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
+import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
+import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import {
 	formatTypeBoxErrors,
 	validateWithTypeBox,
 } from '@hello.nrfcloud.com/proto'
+import { Context, DeviceId } from '@hello.nrfcloud.com/proto-map/api'
 import middy from '@middy/core'
-import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
-import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
-import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { fromEnv } from '@nordicsemiconductor/from-env'
+import { Type } from '@sinclair/typebox'
+import {
+	type APIGatewayProxyEventV2,
+	type APIGatewayProxyResultV2,
+} from 'aws-lambda'
+import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
 
 const { publicDevicesTableName, version } = fromEnv({
 	version: 'VERSION',
@@ -39,7 +41,7 @@ const validateInput = validateWithTypeBox(
 )
 
 const h = async (
-	event: lambda.APIGatewayProxyEventV2,
+	event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
 	console.log(JSON.stringify(event))
 

@@ -8,7 +8,7 @@ import {
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import type { BackendLambdas } from '../BackendLambdas.js'
-import { STACK_NAME } from '../stacks/stackConfig.js'
+import { STACK_NAME } from '../stackConfig.js'
 import type { PublicDevices } from './PublicDevices.js'
 
 export class CustomDevicesAPI extends Construct {

@@ -1,11 +1,10 @@
 import { App } from 'aws-cdk-lib'
-import { BackendStack } from './stacks/BackendStack.js'
+import { BackendStack } from './BackendStack.js'
 
 export class BackendApp extends App {
 	public constructor({
 		isTest,
 		version,
-		domain,
 		...backendArgs
 	}: ConstructorParameters<typeof BackendStack>[1] & {
 		isTest: boolean
@@ -16,7 +15,6 @@ export class BackendApp extends App {
 			context: {
 				isTest,
 				version,
-				domain,
 			},
 		})
 

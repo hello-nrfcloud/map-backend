@@ -8,7 +8,7 @@ import {
 	RemovalPolicy,
 	Stack,
 } from 'aws-cdk-lib'
-import { STACK_NAME } from '../stacks/stackConfig.js'
+import { STACK_NAME } from '../stackConfig.js'
 import {
 	LambdaLogGroup,
 	LambdaSource,

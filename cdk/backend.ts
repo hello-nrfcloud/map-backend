@@ -5,6 +5,8 @@ import { BackendApp } from './BackendApp.js'
 import { pack as packBaseLayer } from './baseLayer.js'
 import { ensureGitHubOIDCProvider } from '@bifravst/ci'
 import { packBackendLambdas } from './packBackendLambdas.js'
+import { ACMClient } from '@aws-sdk/client-acm'
+import { getCertificateForDomain } from '../aws/acm.js'
 
 const repoUrl = new URL(pJSON.repository.url)
 const repository = {
@@ -13,11 +15,15 @@ const repository = {
 }
 
 const iam = new IAMClient({})
+const acm = new ACMClient({})
 
 // Ensure needed container images exist
 const { openSSLLambdaContainerTag } = fromEnv({
 	openSSLLambdaContainerTag: 'OPENSSL_LAMBDA_CONTAINER_TAG',
 })(process.env)
+
+const isTest = process.env.IS_TEST === '1'
+const apiDomainName = process.env.API_DOMAIN_NAME
 
 new BackendApp({
 	lambdaSources: await packBackendLambdas(),
@@ -26,9 +32,13 @@ new BackendApp({
 	gitHubOICDProviderArn: await ensureGitHubOIDCProvider({
 		iam,
 	}),
-	isTest: process.env.IS_TEST === '1',
+	isTest,
 	openSSLLambdaContainerTag,
 	domain: 'hello.nrfcloud.com',
+	apiDomain:
+		apiDomainName !== undefined
+			? await getCertificateForDomain(acm)(apiDomainName)
+			: undefined,
 	version: (() => {
 		const v = process.env.VERSION
 		const defaultVersion = '0.0.0-development'
