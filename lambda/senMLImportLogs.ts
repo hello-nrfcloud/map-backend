@@ -1,10 +1,4 @@
-import {
-	CloudWatchLogsClient,
-	GetQueryResultsCommand,
-	QueryStatus,
-	StartQueryCommand,
-	type ResultField,
-} from '@aws-sdk/client-cloudwatch-logs'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
@@ -21,20 +15,37 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import pRetry from 'p-retry'
+import { importLogs } from '../senml/import-logs.js'
+import type { models } from '@hello.nrfcloud.com/proto-map'
+import {
+	getDeviceById,
+	publicDevicesRepo,
+} from '../sharing/publicDevicesRepo.js'
 
-const { importLogGroupName, version } = fromEnv({
-	importLogGroupName: 'IMPORT_LOGGROUP_NAME',
+const { TableName, importLogsTableName, version, idIndex } = fromEnv({
+	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	importLogsTableName: 'IMPORT_LOGS_TABLE_NAME',
 	version: 'VERSION',
+	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
 })(process.env)
 
-const logs = new CloudWatchLogsClient({})
+const db = new DynamoDBClient({})
 
 const validateInput = validateWithTypeBox(
 	Type.Object({
 		id: DeviceId,
 	}),
 )
+
+const logDb = importLogs(db, importLogsTableName)
+
+const getDevice = getDeviceById({
+	db: new DynamoDBClient({}),
+	TableName,
+	idIndex,
+	getByDeviceId: publicDevicesRepo({ db, TableName }).getByDeviceId,
+})
+const deviceModelCache = new Map<string, keyof typeof models>()
 
 const h = async (
 	event: APIGatewayProxyEventV2,
@@ -49,67 +60,27 @@ const h = async (
 		})
 	}
 
-	const queryString = `filter @logStream LIKE '${maybeValidQuery.value.id}-'
-    | fields @timestamp, @message  
-    | sort @timestamp desc 
-    | limit 100`
-	const { queryId } = await logs.send(
-		new StartQueryCommand({
-			logGroupName: importLogGroupName,
-			queryString,
-			startTime: Date.now() - 24 * 60 * 60 * 1000,
-			endTime: Date.now(),
-		}),
-	)
-	console.debug({ queryId, queryString })
+	const id = maybeValidQuery.value.id
 
-	const results = await pRetry(
-		async () => {
-			const result = await logs.send(
-				new GetQueryResultsCommand({
-					queryId,
-				}),
-			)
-			switch (result.status) {
-				case QueryStatus.Cancelled:
-					return []
-				case QueryStatus.Complete:
-					return result.results
-				case QueryStatus.Failed:
-					console.error(`Query failed!`)
-					return []
-				case QueryStatus.Timeout:
-					console.error(`Query timed out!`)
-					return []
-				case QueryStatus.Running:
-				case QueryStatus.Scheduled:
-					throw new Error(`Running!`)
-				case QueryStatus.Unknown:
-				default:
-					console.debug('Unknown query status.')
-					return []
-			}
-		},
-		{
-			factor: 1,
-			minTimeout: 1000,
-			retries: 10,
-		},
-	)
+	if (!deviceModelCache.has(id)) {
+		const maybeDevice = await getDevice(id)
+		if ('error' in maybeDevice) {
+			return aProblem({
+				title: `Device ${maybeValidQuery.value.id} not shared: ${maybeDevice.error}`,
+				status: 404,
+			})
+		}
+		deviceModelCache.set(id, maybeDevice.publicDevice.model)
+	}
+	const model = deviceModelCache.get(id) as keyof typeof models
 
 	return aResponse(
 		200,
 		{
-			'@context': Context.named('senml-import-logs'),
-			results: (results ?? []).map((fields) => {
-				const result = JSON.parse((fields[1] as ResultField).value as string)
-				return {
-					...result,
-					ts: new Date(
-						(fields[0] as ResultField).value as string,
-					).toISOString(),
-				}
-			}),
+			'@context': Context.named('senml-imports'),
+			id,
+			model,
+			imports: await logDb.findLogs(maybeValidQuery.value.id),
 		},
 		60,
 	)

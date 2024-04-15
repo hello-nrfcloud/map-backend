@@ -32,7 +32,7 @@ export class CustomDomain extends Construct {
 			apiId: api.api.ref,
 			domainName: apiDomain.domain,
 			stage: api.stage.ref,
-			apiMappingKey: api.stage.stageName, // so the api is accessed via the same resource, e.g. https://api.nordicsemi.world/2024-04-12/
+			apiMappingKey: api.stage.stageName, // so the api is accessed via the same resource, e.g. https://api.nordicsemi.world/2024-04-15/
 		}).node.addDependency(domain)
 
 		this.URL = `https://${apiDomain.domain}/${api.stage.stageName}/`

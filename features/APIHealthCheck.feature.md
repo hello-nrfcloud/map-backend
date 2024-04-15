@@ -1,6 +1,6 @@
 ---
 exampleContext:
-  API: "https://api.nordicsemi.world/2024-04-12"
+  API: "https://api.nordicsemi.world/2024-04-15"
 ---
 
 # API health check

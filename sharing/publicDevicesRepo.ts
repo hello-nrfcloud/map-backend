@@ -3,6 +3,7 @@ import {
 	PutItemCommand,
 	GetItemCommand,
 	UpdateItemCommand,
+	QueryCommand,
 } from '@aws-sdk/client-dynamodb'
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import { models } from '@hello.nrfcloud.com/proto-map'
@@ -53,10 +54,12 @@ export const publicDevicesRepo = ({
 	db,
 	TableName,
 	now,
+	superUsersEmailDomain,
 }: {
 	db: DynamoDBClient
 	TableName: string
 	now?: Date
+	superUsersEmailDomain?: string
 }): {
 	getByDeviceId: (
 		deviceId: string,
@@ -123,6 +126,7 @@ export const publicDevicesRepo = ({
 			device,
 		}
 	}
+
 	return {
 		getPrivateRecordByDeviceId,
 		getByDeviceId: async (deviceId: string) => {
@@ -141,9 +145,12 @@ export const publicDevicesRepo = ({
 				generateToken?.() ?? generateCode()
 			).toUpperCase()
 
-			if (confirmed === true && !email.endsWith('@nordicsemi.no')) {
+			if (
+				confirmed === true &&
+				!email.endsWith(`@${superUsersEmailDomain ?? 'nordicsemi.no'}`)
+			) {
 				throw new Error(
-					`Only devices owned by @nordicsemi.no can be shared without confirmation!`,
+					`Only devices owned by ${superUsersEmailDomain ?? 'nordicsemi.no'} can be shared without confirmation!`,
 				)
 			}
 
@@ -227,3 +234,42 @@ export const publicDevicesRepo = ({
 		},
 	}
 }
+
+export const getDeviceById =
+	({
+		db,
+		TableName,
+		idIndex,
+		getByDeviceId,
+	}: {
+		db: DynamoDBClient
+		TableName: string
+		idIndex: string
+		getByDeviceId: (
+			deviceId: string,
+		) => Promise<{ publicDevice: PublicDevice } | PublicDeviceRecordError>
+	}): ((
+		id: string,
+	) => Promise<{ publicDevice: PublicDevice } | PublicDeviceRecordError>) =>
+	async (id: string) => {
+		const { Items } = await db.send(
+			new QueryCommand({
+				TableName,
+				IndexName: idIndex,
+				KeyConditionExpression: '#id = :id',
+				ExpressionAttributeNames: {
+					'#id': 'id',
+					'#deviceId': 'secret__deviceId',
+				},
+				ExpressionAttributeValues: {
+					':id': {
+						S: id,
+					},
+				},
+				ProjectionExpression: '#id, #deviceId',
+			}),
+		)
+		const device = (Items ?? [])[0]
+		if (device === undefined) return { error: 'not_found' }
+		return await getByDeviceId(unmarshall(device).secret__deviceId)
+	}

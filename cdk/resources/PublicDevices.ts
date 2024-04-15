@@ -8,6 +8,7 @@ export class PublicDevices extends Construct {
 	public readonly publicDevicesTable: DynamoDB.Table
 	public readonly publicDevicesTableModelOwnerConfirmedIndex =
 		'modelOwnerConfirmedIndex'
+	public readonly idIndex = 'idIndex'
 	constructor(parent: Construct) {
 		super(parent, 'public-devices')
 
@@ -34,6 +35,19 @@ export class PublicDevices extends Construct {
 			},
 			projectionType: DynamoDB.ProjectionType.INCLUDE,
 			nonKeyAttributes: ['id'],
+		})
+
+		this.publicDevicesTable.addGlobalSecondaryIndex({
+			indexName: this.idIndex,
+			partitionKey: {
+				name: 'id',
+				type: DynamoDB.AttributeType.STRING,
+			},
+			sortKey: {
+				name: 'secret__deviceId',
+				type: DynamoDB.AttributeType.STRING,
+			},
+			projectionType: DynamoDB.ProjectionType.KEYS_ONLY,
 		})
 	}
 }

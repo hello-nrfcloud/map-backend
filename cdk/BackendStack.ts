@@ -113,10 +113,7 @@ export class BackendStack extends Stack {
 			lambdaSources,
 			publicDevices,
 		})
-		api.addRoute(
-			'GET /device/{id}/senml-import-logs',
-			senMLMessages.importLogsFn,
-		)
+		api.addRoute('GET /device/{id}/senml-imports', senMLMessages.importLogsFn)
 
 		new ConnectionInformationGeoLocation(this, {
 			baseLayer,
@@ -182,8 +179,8 @@ export class BackendStack extends Stack {
 export type StackOutputs = {
 	/**
 	 * The URL of the deployed API
-	 * @example https://api.nordicsemi.world/2024-04-12/
-	 * @example https://9gsm5gind2.execute-api.eu-west-1.amazonaws.com/2024-04-12
+	 * @example https://api.nordicsemi.world/2024-04-15/
+	 * @example https://9gsm5gind2.execute-api.eu-west-1.amazonaws.com/2024-04-15
 	 */
 	APIURL: string
 	/**

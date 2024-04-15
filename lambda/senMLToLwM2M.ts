@@ -1,30 +1,25 @@
+import { MetricUnit } from '@aws-lambda-powertools/metrics'
+import { logMetrics } from '@aws-lambda-powertools/metrics/middleware'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane'
+import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
+import { validateWithTypeBox } from '@hello.nrfcloud.com/proto'
 import { SenML, senMLtoLwM2M } from '@hello.nrfcloud.com/proto-map'
+import middy from '@middy/core'
 import { fromEnv } from '@nordicsemiconductor/from-env'
+import { importLogs } from '../senml/import-logs.js'
 import {
 	publicDevicesRepo,
 	type PublicDevice,
 } from '../sharing/publicDevicesRepo.js'
 import { updateLwM2MShadow } from './updateLwM2MShadow.js'
-import { validateWithTypeBox } from '@hello.nrfcloud.com/proto'
-import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
-import { MetricUnit } from '@aws-lambda-powertools/metrics'
-import middy from '@middy/core'
-import { logMetrics } from '@aws-lambda-powertools/metrics/middleware'
-import {
-	CloudWatchLogsClient,
-	PutLogEventsCommand,
-	CreateLogStreamCommand,
-} from '@aws-sdk/client-cloudwatch-logs'
-import id128 from 'id128'
 
-const { TableName, importLogGroupName } = fromEnv({
+const { TableName, importLogsTableName } = fromEnv({
 	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
-	importLogGroupName: 'IMPORT_LOGGROUP_NAME',
+	importLogsTableName: 'IMPORT_LOGS_TABLE_NAME',
 })(process.env)
 
-const logs = new CloudWatchLogsClient({})
+const db = new DynamoDBClient({})
 
 const updateShadow = updateLwM2MShadow(new IoTDataPlaneClient({}))
 
@@ -40,6 +35,8 @@ const { track, metrics } = metricsForComponent(
 	'deviceMessage',
 	'hello-nrfcloud-map',
 )
+
+const logDb = importLogs(db, importLogsTableName)
 
 /**
  * Store SenML messages as LwM2M objects in a named shadow.
@@ -68,15 +65,6 @@ const h = async (event: {
 		return
 	}
 
-	const logStreamName = `${deviceInfo.id}-${id128.Ulid.generate().toCanonical()}`
-
-	await logs.send(
-		new CreateLogStreamCommand({
-			logGroupName: importLogGroupName,
-			logStreamName,
-		}),
-	)
-
 	// TODO: Limit number of messages per day
 
 	const maybeValidSenML = isValid(message)
@@ -84,49 +72,18 @@ const h = async (event: {
 		// TODO: persist errors so users can debug their payloads
 		console.error(JSON.stringify(maybeValidSenML.errors))
 		console.error(`Invalid SenML message`)
-		await logs.send(
-			new PutLogEventsCommand({
-				logGroupName: importLogGroupName,
-				logStreamName,
-				logEvents: [
-					{
-						timestamp: Date.now(),
-						message: JSON.stringify({
-							success: false,
-							id: deviceInfo.id,
-							error: 'Invalid SenML message',
-							detail: maybeValidSenML.errors,
-							senML: message,
-						}),
-					},
-				],
-			}),
-		)
+		track('error', MetricUnit.Count, 1)
+		await logDb.recordError(deviceInfo.id, message, maybeValidSenML.errors)
 		return
 	}
 
 	const objects = senMLtoLwM2M(maybeValidSenML.value)
 
+	track('success', MetricUnit.Count, 1)
+
 	console.debug(`[${deviceId}]`, deviceInfo.model, objects)
 
-	await logs.send(
-		new PutLogEventsCommand({
-			logGroupName: importLogGroupName,
-			logStreamName,
-			logEvents: [
-				{
-					timestamp: Date.now(),
-					message: JSON.stringify({
-						success: true,
-						id: deviceInfo.id,
-						model: deviceInfo.model,
-						senML: message,
-						lwm2m: objects,
-					}),
-				},
-			],
-		}),
-	)
+	await logDb.recordSuccess(deviceInfo, message, objects)
 
 	await updateShadow(deviceInfo.id, objects)
 }

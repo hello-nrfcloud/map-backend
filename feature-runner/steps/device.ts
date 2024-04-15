@@ -10,8 +10,11 @@ import {
 } from '@nordicsemiconductor/bdd-markdown'
 import { Type } from '@sinclair/typebox'
 import { fingerprintGenerator } from '@hello.nrfcloud.com/proto/fingerprint'
-import { IMEI } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
+import { IMEI, email } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
 import type { HttpAPIMock } from '@bifravst/http-api-mock/mock'
+import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { publicDevicesRepo } from '../../sharing/publicDevicesRepo.js'
+import { models } from '@hello.nrfcloud.com/proto-map'
 
 const getCurrentWeekNumber = (): number => {
 	const now = new Date()
@@ -67,6 +70,44 @@ const oobDeviceWithFingerprint = (
 		},
 	)
 
+const modelIDs = Object.keys(models)
+
+const sharedDevice = (db: DynamoDBClient, publicDevicesTableName: string) =>
+	regExpMatchedStep(
+		{
+			regExp:
+				/^I have the device id for a shared `(?<modelName>[^`]+)` device in `(?<idStorageName>[^`]+)` and the public device id in `(?<publicIdStorageName>[^`]+)`$/,
+			schema: Type.Object({
+				modelName: Type.Union(modelIDs.map((model) => Type.Literal(model))),
+				idStorageName: Type.String({ minLength: 1 }),
+				publicIdStorageName: Type.String({ minLength: 1 }),
+			}),
+		},
+		async ({
+			match: { modelName, idStorageName, publicIdStorageName },
+			log: { progress },
+			context,
+		}) => {
+			const deviceId = crypto.randomUUID()
+			progress(`Device ID: ${deviceId}`)
+			context[idStorageName] = deviceId
+			const repo = publicDevicesRepo({
+				db,
+				TableName: publicDevicesTableName,
+				superUsersEmailDomain: 'example.com',
+			})
+			const d = await repo.share({
+				deviceId,
+				model: modelName,
+				email: email(),
+				confirmed: true,
+			})
+			if ('error' in d)
+				throw new Error(`Could not share device: ${d.error.message}!`)
+			context[publicIdStorageName] = d.publicDevice.id
+		},
+	)
+
 const publishDeviceMessage = (iotData: IoTDataPlaneClient) =>
 	regExpMatchedStep(
 		{
@@ -99,11 +140,16 @@ export const steps = ({
 	iotData,
 	httpApiMock,
 	helloAPIBasePath,
+	db,
+	publicDevicesTableName,
 }: {
 	iotData: IoTDataPlaneClient
 	httpApiMock: HttpAPIMock
 	helloAPIBasePath: string
+	db: DynamoDBClient
+	publicDevicesTableName: string
 }): Array<StepRunner<Record<string, any>>> => [
 	publishDeviceMessage(iotData),
 	oobDeviceWithFingerprint(httpApiMock, helloAPIBasePath),
+	sharedDevice(db, publicDevicesTableName),
 ]
