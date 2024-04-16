@@ -45,6 +45,7 @@ export class ShareAPI extends Construct {
 			environment: {
 				VERSION: this.node.getContext('version'),
 				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+				PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
 				FROM_EMAIL: `notification@${domain}`,
 				NODE_NO_WARNINGS: '1',
 				IS_TEST: this.node.getContext('isTest') === true ? '1' : '0',
@@ -83,6 +84,7 @@ export class ShareAPI extends Construct {
 			environment: {
 				VERSION: this.node.getContext('version'),
 				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+				PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
 				NODE_NO_WARNINGS: '1',
 			},
 			...new LambdaLogGroup(this, 'confirmOwnershipFnLogs'),
@@ -101,6 +103,7 @@ export class ShareAPI extends Construct {
 			environment: {
 				VERSION: this.node.getContext('version'),
 				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+				PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
 				NODE_NO_WARNINGS: '1',
 			},
 			...new LambdaLogGroup(this, 'sharingStatusFnLogs'),

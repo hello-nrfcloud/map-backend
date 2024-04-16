@@ -1,5 +1,5 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { consentDurationDays } from '../sharing/consentDuration.js'
+import { consentDurationDays } from '../devices/consentDuration.js'
 
 export const sendOwnershipVerificationEmail =
 	(ses: SESClient, fromEmail: string) =>

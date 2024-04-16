@@ -23,7 +23,7 @@ import type {
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
 import { shadowToObjects } from '../lwm2m/shadowToObjects.js'
-import { consentDurationMS } from '../sharing/consentDuration.js'
+import { consentDurationMS } from '../devices/consentDuration.js'
 import middy from '@middy/core'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'

@@ -17,16 +17,13 @@ import type {
 } from 'aws-lambda'
 import { importLogs } from '../senml/import-logs.js'
 import type { models } from '@hello.nrfcloud.com/proto-map'
-import {
-	getDeviceById,
-	publicDevicesRepo,
-} from '../sharing/publicDevicesRepo.js'
+import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
 
 const { TableName, importLogsTableName, version, idIndex } = fromEnv({
 	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
 	importLogsTableName: 'IMPORT_LOGS_TABLE_NAME',
 	version: 'VERSION',
-	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
 })(process.env)
 
 const db = new DynamoDBClient({})
@@ -39,12 +36,7 @@ const validateInput = validateWithTypeBox(
 
 const logDb = importLogs(db, importLogsTableName)
 
-const getDevice = getDeviceById({
-	db: new DynamoDBClient({}),
-	TableName,
-	idIndex,
-	getByDeviceId: publicDevicesRepo({ db, TableName }).getByDeviceId,
-})
+const devicesRepo = publicDevicesRepo({ db, TableName, idIndex })
 const deviceModelCache = new Map<string, keyof typeof models>()
 
 const h = async (
@@ -63,14 +55,14 @@ const h = async (
 	const id = maybeValidQuery.value.id
 
 	if (!deviceModelCache.has(id)) {
-		const maybeDevice = await getDevice(id)
+		const maybeDevice = await devicesRepo.getById(id)
 		if ('error' in maybeDevice) {
 			return aProblem({
 				title: `Device ${maybeValidQuery.value.id} not shared: ${maybeDevice.error}`,
 				status: 404,
 			})
 		}
-		deviceModelCache.set(id, maybeDevice.publicDevice.model)
+		deviceModelCache.set(id, maybeDevice.device.model)
 	}
 	const model = deviceModelCache.get(id) as keyof typeof models
 

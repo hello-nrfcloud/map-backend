@@ -34,6 +34,7 @@ export class DevicesAPI extends Construct {
 			environment: {
 				VERSION: this.node.getContext('version'),
 				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+				PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
 				PUBLIC_DEVICES_TABLE_MODEL_OWNER_CONFIRMED_INDEX_NAME:
 					publicDevices.publicDevicesTableModelOwnerConfirmedIndex,
 				NODE_NO_WARNINGS: '1',

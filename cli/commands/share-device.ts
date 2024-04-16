@@ -1,7 +1,7 @@
 import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { models } from '@hello.nrfcloud.com/proto-map'
 import chalk from 'chalk'
-import { publicDevicesRepo } from '../../sharing/publicDevicesRepo.js'
+import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
 import type { CommandDefinition } from './CommandDefinition.js'
 
 const modelIDs = Object.keys(models)
@@ -9,9 +9,11 @@ const modelIDs = Object.keys(models)
 export const shareDevice = ({
 	db,
 	publicDevicesTableName,
+	idIndex,
 }: {
 	db: DynamoDBClient
 	publicDevicesTableName: string
+	idIndex: string
 }): CommandDefinition => ({
 	command: `share-device <deviceId> <model> <email>`,
 	action: async (deviceId, model, email) => {
@@ -27,6 +29,7 @@ export const shareDevice = ({
 		const publicDevice = publicDevicesRepo({
 			db,
 			TableName: publicDevicesTableName,
+			idIndex,
 		})
 		const maybePublished = await publicDevice.share({
 			deviceId,

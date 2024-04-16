@@ -10,12 +10,13 @@ import { fromEnv } from '@nordicsemiconductor/from-env'
 import { importLogs } from '../senml/import-logs.js'
 import {
 	publicDevicesRepo,
-	type PublicDevice,
-} from '../sharing/publicDevicesRepo.js'
+	type PublicDeviceRecord,
+} from '../devices/publicDevicesRepo.js'
 import { updateLwM2MShadow } from './updateLwM2MShadow.js'
 
-const { TableName, importLogsTableName } = fromEnv({
+const { TableName, importLogsTableName, idIndex } = fromEnv({
 	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
 	importLogsTableName: 'IMPORT_LOGS_TABLE_NAME',
 })(process.env)
 
@@ -26,6 +27,7 @@ const updateShadow = updateLwM2MShadow(new IoTDataPlaneClient({}))
 const devicesRepo = publicDevicesRepo({
 	db: new DynamoDBClient({}),
 	TableName,
+	idIndex,
 })
 const devicesInfoCache = new Map<string, { id: string; model: string } | null>()
 
@@ -56,10 +58,10 @@ const h = async (event: {
 			console.debug(`[${deviceId}]`, `Error: ${maybeDevice.error}`)
 			devicesInfoCache.set(deviceId, null)
 		} else {
-			devicesInfoCache.set(deviceId, maybeDevice.publicDevice)
+			devicesInfoCache.set(deviceId, maybeDevice.device)
 		}
 	}
-	const deviceInfo = devicesInfoCache.get(deviceId) as PublicDevice | null
+	const deviceInfo = devicesInfoCache.get(deviceId) as PublicDeviceRecord | null
 	if (deviceInfo === null) {
 		console.debug(`[${deviceId}]`, 'unknown device')
 		return

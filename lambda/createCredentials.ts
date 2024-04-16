@@ -8,7 +8,7 @@ import type {
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
 import { devices as devicesApi } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
-import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
+import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import middy from '@middy/core'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
@@ -19,15 +19,20 @@ import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
 import { MetricUnit } from '@aws-lambda-powertools/metrics'
 import { NRF_CLOUD_ACCOUNT } from '../settings/account.js'
 
-const { backendStackName, openSslLambdaFunctionName, publicDevicesTableName } =
-	fromEnv({
-		backendStackName: 'BACKEND_STACK_NAME',
-		openSslLambdaFunctionName: 'OPENSSL_LAMBDA_FUNCTION_NAME',
-		publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
-	})({
-		STACK_NAME,
-		...process.env,
-	})
+const {
+	backendStackName,
+	openSslLambdaFunctionName,
+	publicDevicesTableName,
+	idIndex,
+} = fromEnv({
+	backendStackName: 'BACKEND_STACK_NAME',
+	openSslLambdaFunctionName: 'OPENSSL_LAMBDA_FUNCTION_NAME',
+	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
+})({
+	STACK_NAME,
+	...process.env,
+})
 const ssm = new SSMClient({})
 
 const { apiKey, apiEndpoint } = await getAPISettings({
@@ -46,6 +51,7 @@ const lambda = new LambdaClient({})
 const repo = publicDevicesRepo({
 	db: new DynamoDBClient({}),
 	TableName: publicDevicesTableName,
+	idIndex,
 })
 
 const { track, metrics } = metricsForComponent(
@@ -69,7 +75,7 @@ const h = async (
 			title: 'Credentials can only be created for custom devices.',
 		})
 
-	const maybePublicDevice = await repo.getPrivateRecordByDeviceId(deviceId)
+	const maybePublicDevice = await repo.getByDeviceId(deviceId)
 
 	if ('error' in maybePublicDevice) {
 		return aProblem({

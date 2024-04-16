@@ -7,7 +7,7 @@ import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import type { LwM2MObjectInstance } from '@hello.nrfcloud.com/proto-map'
 import type { ValueError } from '@sinclair/typebox/errors'
 import id128 from 'id128'
-import type { PublicDevice } from '../sharing/publicDevicesRepo.js'
+import type { PublicDeviceRecord } from '../devices/publicDevicesRepo.js'
 
 const sharedProps = (publicDeviceId: string) => ({
 	publicDeviceId,
@@ -23,7 +23,7 @@ type ImportLogsRepository = {
 		errors: ValueError[],
 	) => Promise<void>
 	recordSuccess: (
-		publicDevice: PublicDevice,
+		publicDevice: PublicDeviceRecord,
 		senML: Record<string, any>,
 		lwm2m: Array<LwM2MObjectInstance>,
 	) => Promise<void>

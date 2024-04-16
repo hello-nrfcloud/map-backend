@@ -6,7 +6,7 @@ import chalk from 'chalk'
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { publicDevicesRepo } from '../../sharing/publicDevicesRepo.js'
+import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
 import { createCA } from '@hello.nrfcloud.com/certificate-helpers/ca'
 import { createDeviceCertificate } from '@hello.nrfcloud.com/certificate-helpers/device'
 import type { CommandDefinition } from './CommandDefinition.js'
@@ -21,12 +21,14 @@ export const registerCustomMapDevice = ({
 	stackName,
 	db,
 	publicDevicesTableName,
+	idIndex,
 	env,
 }: {
 	ssm: SSMClient
 	stackName: string
 	db: DynamoDBClient
 	publicDevicesTableName: string
+	idIndex: string
 	env: Required<Environment>
 }): CommandDefinition => ({
 	command: 'register-custom-map-device <model> <email>',
@@ -43,6 +45,7 @@ export const registerCustomMapDevice = ({
 		const publicDevice = publicDevicesRepo({
 			db,
 			TableName: publicDevicesTableName,
+			idIndex,
 		})
 		const maybePublished = await publicDevice.share({
 			deviceId,

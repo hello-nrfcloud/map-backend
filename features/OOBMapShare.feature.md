@@ -120,7 +120,7 @@ And `$.devices[id="${publicDeviceId}"]` of the last response should match
 
 > Users should be able to determine whether a certain device is sharing data
 
-When I `GET` to `${API}/device/${deviceId}`
+When I `GET` to `${API}/device/${publicDeviceId}`
 
 Then I should receive a `https://github.com/hello-nrfcloud/proto-map/device`
 response

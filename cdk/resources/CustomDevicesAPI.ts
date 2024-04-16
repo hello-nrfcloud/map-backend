@@ -66,6 +66,7 @@ export class CustomDevicesAPI extends Construct {
 				BACKEND_STACK_NAME: STACK_NAME,
 				OPENSSL_LAMBDA_FUNCTION_NAME: openSSLFn.functionName,
 				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+				PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
 			},
 			...new LambdaLogGroup(this, 'createCredentialsFnLogs'),
 			initialPolicy: [SettingsPermissions(Stack.of(this))],

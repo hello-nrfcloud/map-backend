@@ -1,6 +1,6 @@
 import { describe, it, mock } from 'node:test'
 import assert from 'node:assert/strict'
-import { getDeviceById, publicDevicesRepo } from './publicDevicesRepo.js'
+import { publicDevicesRepo, toPublic } from './publicDevicesRepo.js'
 import { marshall } from '@aws-sdk/util-dynamodb'
 import { assertCall } from '../util/test/assertCall.js'
 import { randomUUID } from 'node:crypto'
@@ -10,10 +10,12 @@ import {
 	alphabet,
 	numbers,
 } from '@hello.nrfcloud.com/proto/fingerprint'
+import { ModelID } from '@hello.nrfcloud.com/proto-map'
 
 void describe('publicDevicesRepo()', () => {
 	void describe('getByDeviceId()', () => {
 		void it('should fetch device data', async () => {
+			const ownerConfirmed = new Date()
 			const id = randomUUID()
 			const send = mock.fn(async () =>
 				Promise.resolve({
@@ -21,7 +23,7 @@ void describe('publicDevicesRepo()', () => {
 						id,
 						secret__deviceId: 'some-device',
 						model: 'asset_tracker_v2+AWS',
-						ownerConfirmed: new Date().toISOString(),
+						ownerConfirmed: ownerConfirmed.toISOString(),
 					}),
 				}),
 			)
@@ -31,11 +33,14 @@ void describe('publicDevicesRepo()', () => {
 						send,
 					} as any,
 					TableName: 'some-table',
+					idIndex: 'idIndex',
 				}).getByDeviceId('some-device'),
 				{
-					publicDevice: {
+					device: {
 						id,
 						model: 'asset_tracker_v2+AWS',
+						secret__deviceId: 'some-device',
+						ownerConfirmed: ownerConfirmed.toISOString(),
 					},
 				},
 			)
@@ -54,6 +59,7 @@ void describe('publicDevicesRepo()', () => {
 						send: async () => Promise.resolve({}),
 					} as any,
 					TableName: 'some-table',
+					idIndex: 'idIndex',
 				}).getByDeviceId('some-device'),
 				{ error: 'not_found' },
 			))
@@ -70,13 +76,14 @@ void describe('publicDevicesRepo()', () => {
 				} as any,
 				TableName: 'some-table',
 				now,
+				idIndex: 'idIndex',
 			}).share({
 				deviceId: 'some-device',
 				model: 'asset_tracker_v2+AWS',
 				email: 'alex@example.com',
 			})
 
-			const id = ('publicDevice' in res && res.publicDevice.id) as string
+			const id = ('device' in res && res.device.id) as string
 
 			assert.match(id, /^[a-z0-9]{8}-[a-z0-9]{8}-[a-z0-9]{8}$/) // e.g. mistrist-manicate-lunation
 
@@ -120,13 +127,14 @@ void describe('publicDevicesRepo()', () => {
 				} as any,
 				TableName: 'some-table',
 				now,
+				idIndex: 'idIndex',
 			}).confirmOwnership({
 				deviceId: id,
 				ownershipConfirmationToken,
 			})
 
 			assert.deepEqual(res, {
-				publicDevice: {
+				device: {
 					id,
 				},
 			})
@@ -154,36 +162,41 @@ void describe('publicDevicesRepo()', () => {
 	})
 })
 
-void describe('getDeviceById()', () => {
+void describe('getById()', () => {
 	void it(`it should return a device by it's public ID`, async () => {
 		const id = randomUUID()
-		const send = mock.fn(async () =>
-			Promise.resolve({
-				Items: [
-					marshall({
+		const send = mock.fn()
+		send.mock.mockImplementationOnce(
+			async () =>
+				Promise.resolve({
+					Items: [
+						marshall({
+							id,
+							secret__deviceId: 'some-device',
+						}),
+					],
+				}),
+			0,
+		)
+		send.mock.mockImplementationOnce(
+			async () =>
+				Promise.resolve({
+					Item: marshall({
 						id,
 						secret__deviceId: 'some-device',
+						model: 'asset_tracker_v2+AWS',
+						ownerConfirmed: new Date().toISOString(),
 					}),
-				],
-			}),
+				}),
+			1,
 		)
-		const getByDeviceId = mock.fn(async () =>
-			Promise.resolve({
-				publicDevice: {
-					id,
-					model: 'asset_tracker_v2+AWS',
-				},
-			}),
-		)
-
-		const res = await getDeviceById({
+		const res = await publicDevicesRepo({
 			db: {
 				send,
 			} as any,
 			TableName: 'some-table',
 			idIndex: 'id-index',
-			getByDeviceId: getByDeviceId as any,
-		})(id)
+		}).getById(id)
 
 		assertCall(send, {
 			input: {
@@ -203,13 +216,44 @@ void describe('getDeviceById()', () => {
 			},
 		})
 
-		assert.deepEqual(getByDeviceId.mock.calls[0]?.arguments, ['some-device'])
-
-		assert.deepEqual(res, {
-			publicDevice: {
-				id,
-				model: 'asset_tracker_v2+AWS',
+		assertCall(
+			send,
+			{
+				input: {
+					TableName: 'some-table',
+					Key: { secret__deviceId: { S: 'some-device' } },
+				},
 			},
+			1,
+		)
+
+		assert.deepEqual('device' in res && toPublic(res.device), {
+			id,
+			model: 'asset_tracker_v2+AWS',
 		})
+	})
+})
+
+void describe('toPublic()', () => {
+	void it('should convert a record to a publicly shareable record', () => {
+		const id = randomUUID()
+		const record = toPublic({
+			id,
+			secret__deviceId: 'some-device',
+			model: ModelID.PCA20035_solar,
+			ownerConfirmed: new Date(),
+			ownerEmail: 'alex@example.com',
+			ownershipConfirmationToken: '123456',
+			ownershipConfirmationTokenCreated: new Date(),
+			ttl: Date.now(),
+		})
+		assert.deepEqual(record, {
+			id,
+			model: ModelID.PCA20035_solar,
+		})
+		assert.equal(
+			Object.values(record as Record<string, any>).includes('some-device'),
+			false,
+		)
 	})
 })

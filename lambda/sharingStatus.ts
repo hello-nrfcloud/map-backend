@@ -11,26 +11,28 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
+import { publicDevicesRepo, toPublic } from '../devices/publicDevicesRepo.js'
 import middy from '@middy/core'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 
-const { publicDevicesTableName, version } = fromEnv({
+const { TableName, version, idIndex } = fromEnv({
 	version: 'VERSION',
-	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
 })(process.env)
 
 const db = new DynamoDBClient({})
-const repo = publicDevicesRepo({ db, TableName: publicDevicesTableName })
 
 const validateInput = validateWithTypeBox(
 	Type.Object({
 		id: DeviceId,
 	}),
 )
+
+const devicesRepo = publicDevicesRepo({ db, TableName, idIndex })
 
 const h = async (
 	event: APIGatewayProxyEventV2,
@@ -47,7 +49,7 @@ const h = async (
 		})
 	}
 
-	const maybeDevice = await repo.getByDeviceId(maybeValidQuery.value.id)
+	const maybeDevice = await devicesRepo.getById(maybeValidQuery.value.id)
 
 	console.log(JSON.stringify(maybeDevice))
 
@@ -62,7 +64,7 @@ const h = async (
 		200,
 		{
 			'@context': Context.device,
-			...maybeDevice.publicDevice,
+			...toPublic(maybeDevice.device),
 		},
 		60 * 60 * 24,
 	)

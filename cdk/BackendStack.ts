@@ -71,6 +71,11 @@ export class BackendStack extends Stack {
 			description: 'name of the public devices table',
 			value: publicDevices.publicDevicesTable.tableName,
 		})
+		new CfnOutput(this, 'publicDevicesTableIdIndexName', {
+			exportName: `${this.stackName}:publicDevicesTableIdIndexName`,
+			description: 'name of the public devices table id index',
+			value: publicDevices.idIndex,
+		})
 
 		const api = new API(this)
 		api.addRoute(
@@ -192,6 +197,7 @@ export type StackOutputs = {
 	 */
 	gatewayDomainName?: string
 	publicDevicesTableName: string
+	publicDevicesTableIdIndexName: string
 	/**
 	 * Role ARN to use in the deploy GitHub Actions Workflow
 	 */

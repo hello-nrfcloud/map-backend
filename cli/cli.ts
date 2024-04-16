@@ -64,18 +64,20 @@ const CLI = async ({ isCI }: { isCI: boolean }) => {
 		console.error('Running on CI...')
 	} else {
 		try {
-			const mapOutputs = await stackOutput(cf)<StackOutputs>(STACK_NAME)
+			const backendOutputs = await stackOutput(cf)<StackOutputs>(STACK_NAME)
 			commands.push(
 				registerCustomMapDevice({
 					db,
-					publicDevicesTableName: mapOutputs.publicDevicesTableName,
+					publicDevicesTableName: backendOutputs.publicDevicesTableName,
+					idIndex: backendOutputs.publicDevicesTableIdIndexName,
 					ssm,
 					env: accountEnv,
 					stackName: STACK_NAME,
 				}),
 				shareDevice({
 					db,
-					publicDevicesTableName: mapOutputs.publicDevicesTableName,
+					publicDevicesTableName: backendOutputs.publicDevicesTableName,
+					idIndex: backendOutputs.publicDevicesTableIdIndexName,
 				}),
 			)
 		} catch (error) {
