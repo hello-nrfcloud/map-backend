@@ -61,6 +61,7 @@ export class SenMLMessages extends Construct {
 			environment: {
 				VERSION: this.node.getContext('version'),
 				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+				PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
 				IMPORT_LOGS_TABLE_NAME: importLogs.tableName,
 			},
 			initialPolicy: [

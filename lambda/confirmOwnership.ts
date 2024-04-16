@@ -15,11 +15,12 @@ import {
 	type APIGatewayProxyEventV2,
 	type APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
+import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
 
-const { publicDevicesTableName, version } = fromEnv({
+const { publicDevicesTableName, version, idIndex } = fromEnv({
 	version: 'VERSION',
 	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
 })(process.env)
 
 const db = new DynamoDBClient({})
@@ -27,6 +28,7 @@ const db = new DynamoDBClient({})
 const publicDevice = publicDevicesRepo({
 	db,
 	TableName: publicDevicesTableName,
+	idIndex,
 })
 
 const validateInput = validateWithTypeBox(
@@ -71,7 +73,7 @@ const h = async (
 
 	return aResponse(200, {
 		'@context': Context.shareDevice.ownershipConfirmed,
-		id: maybeConfirmed.publicDevice.id,
+		id: maybeConfirmed.device.id,
 	})
 }
 

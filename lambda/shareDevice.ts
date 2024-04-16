@@ -15,7 +15,7 @@ import {
 	type APIGatewayProxyResultV2,
 } from 'aws-lambda'
 import { randomUUID } from 'node:crypto'
-import { publicDevicesRepo } from '../sharing/publicDevicesRepo.js'
+import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
 import { sendOwnershipVerificationEmail } from './sendOwnershipVerificationEmail.js'
 
 import { MetricUnit } from '@aws-lambda-powertools/metrics'
@@ -30,14 +30,21 @@ import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
 import middy from '@middy/core'
 import { getSettings } from '../settings/hello.js'
 
-const { publicDevicesTableName, fromEmail, isTestString, version, stackName } =
-	fromEnv({
-		version: 'VERSION',
-		publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
-		fromEmail: 'FROM_EMAIL',
-		isTestString: 'IS_TEST',
-		stackName: 'STACK_NAME',
-	})(process.env)
+const {
+	publicDevicesTableName,
+	fromEmail,
+	isTestString,
+	version,
+	stackName,
+	idIndex,
+} = fromEnv({
+	version: 'VERSION',
+	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
+	fromEmail: 'FROM_EMAIL',
+	isTestString: 'IS_TEST',
+	stackName: 'STACK_NAME',
+})(process.env)
 
 const isTest = isTestString === '1'
 
@@ -48,6 +55,7 @@ const ssm = new SSMClient({})
 const publicDevice = publicDevicesRepo({
 	db,
 	TableName: publicDevicesTableName,
+	idIndex,
 })
 
 const sendEmail = sendOwnershipVerificationEmail(ses, fromEmail)
@@ -160,14 +168,14 @@ const publish = async ({
 			email,
 			deviceId,
 			ownershipConfirmationToken:
-				maybePublished.publicDevice.ownershipConfirmationToken,
+				maybePublished.device.ownershipConfirmationToken,
 		})
 
 	console.debug(JSON.stringify({ deviceId, model, email }))
 
 	return aResponse(200, {
 		'@context': Context.shareDevice.request,
-		id: maybePublished.publicDevice.id,
+		id: maybePublished.device.id,
 		deviceId,
 	})
 }

@@ -8,12 +8,13 @@ import {
 } from '../lwm2m/transformMessageToLwM2M.js'
 import {
 	publicDevicesRepo,
-	type PublicDevice,
-} from '../sharing/publicDevicesRepo.js'
+	type PublicDeviceRecord,
+} from '../devices/publicDevicesRepo.js'
 import { updateLwM2MShadow } from './updateLwM2MShadow.js'
 
-const { TableName } = fromEnv({
+const { TableName, idIndex } = fromEnv({
 	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
+	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
 })(process.env)
 
 const updateShadow = updateLwM2MShadow(new IoTDataPlaneClient({}))
@@ -29,6 +30,7 @@ const transforms = Object.entries(models).reduce(
 const devicesRepo = publicDevicesRepo({
 	db: new DynamoDBClient({}),
 	TableName,
+	idIndex,
 })
 const devicesInfoCache = new Map<string, { id: string; model: string } | null>()
 
@@ -50,10 +52,10 @@ export const handler = async (event: {
 			console.debug(`[${deviceId}]`, `Error: ${maybeDevice.error}`)
 			devicesInfoCache.set(deviceId, null)
 		} else {
-			devicesInfoCache.set(deviceId, maybeDevice.publicDevice)
+			devicesInfoCache.set(deviceId, maybeDevice.device)
 		}
 	}
-	const deviceInfo = devicesInfoCache.get(deviceId) as PublicDevice | null
+	const deviceInfo = devicesInfoCache.get(deviceId) as PublicDeviceRecord | null
 	if (deviceInfo === null) {
 		console.debug(`[${deviceId}]`, 'unknown device')
 		return

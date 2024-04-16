@@ -33,14 +33,7 @@ export type PublicDeviceRecord = {
 	ttl: number
 }
 
-export type PublicDeviceRecordById = Pick<
-	PublicDeviceRecord,
-	'id' | 'model' | 'ownerConfirmed' | 'secret__deviceId'
->
-
 const modelNames = Object.keys(models)
-
-export type PublicDevice = Pick<PublicDeviceRecord, 'id' | 'model'>
 
 type PublicDeviceRecordError = {
 	error:
@@ -55,20 +48,22 @@ export const publicDevicesRepo = ({
 	TableName,
 	now,
 	superUsersEmailDomain,
+	idIndex,
 }: {
 	db: DynamoDBClient
 	TableName: string
 	now?: Date
 	superUsersEmailDomain?: string
+	idIndex: string
 }): {
-	getByDeviceId: (
-		deviceId: string,
-	) => Promise<{ publicDevice: PublicDevice } | PublicDeviceRecordError>
 	/**
 	 * Contains all data, not intended to be shared publically.
 	 */
-	getPrivateRecordByDeviceId: (
+	getByDeviceId: (
 		deviceId: string,
+	) => Promise<{ device: PublicDeviceRecord } | PublicDeviceRecordError>
+	getById: (
+		id: string,
 	) => Promise<{ device: PublicDeviceRecord } | PublicDeviceRecordError>
 	share: (args: {
 		deviceId: string
@@ -82,7 +77,7 @@ export const publicDevicesRepo = ({
 				error: Error
 		  }
 		| {
-				publicDevice: {
+				device: {
 					id: string
 					ownershipConfirmationToken: string
 				}
@@ -96,13 +91,13 @@ export const publicDevicesRepo = ({
 				error: Error
 		  }
 		| {
-				publicDevice: {
+				device: {
 					id: string
 				}
 		  }
 	>
 } => {
-	const getPrivateRecordByDeviceId = async (
+	const getByDeviceId = async (
 		deviceId: string,
 	): Promise<{ device: PublicDeviceRecord } | PublicDeviceRecordError> => {
 		const { Item } = await db.send(
@@ -126,18 +121,29 @@ export const publicDevicesRepo = ({
 			device,
 		}
 	}
-
 	return {
-		getPrivateRecordByDeviceId,
-		getByDeviceId: async (deviceId: string) => {
-			const maybePublicDevice = await getPrivateRecordByDeviceId(deviceId)
-			if ('error' in maybePublicDevice) return maybePublicDevice
-			return {
-				publicDevice: {
-					id: maybePublicDevice.device.id,
-					model: maybePublicDevice.device.model,
-				},
-			}
+		getByDeviceId,
+		getById: async (id) => {
+			const { Items } = await db.send(
+				new QueryCommand({
+					TableName,
+					IndexName: idIndex,
+					KeyConditionExpression: '#id = :id',
+					ExpressionAttributeNames: {
+						'#id': 'id',
+						'#deviceId': 'secret__deviceId',
+					},
+					ExpressionAttributeValues: {
+						':id': {
+							S: id,
+						},
+					},
+					ProjectionExpression: '#id, #deviceId',
+				}),
+			)
+			const device = (Items ?? [])[0]
+			if (device === undefined) return { error: 'not_found' }
+			return await getByDeviceId(unmarshall(device).secret__deviceId)
 		},
 		share: async ({ deviceId, model, email, generateToken, confirmed }) => {
 			const id = randomWords({ numWords: 3 }).join('-')
@@ -192,7 +198,7 @@ export const publicDevicesRepo = ({
 			}
 
 			return {
-				publicDevice: {
+				device: {
 					id,
 					ownershipConfirmationToken,
 				},
@@ -224,7 +230,7 @@ export const publicDevicesRepo = ({
 					}),
 				)
 				return {
-					publicDevice: {
+					device: {
 						id: Attributes?.['id']?.S as string,
 					},
 				}
@@ -235,41 +241,9 @@ export const publicDevicesRepo = ({
 	}
 }
 
-export const getDeviceById =
-	({
-		db,
-		TableName,
-		idIndex,
-		getByDeviceId,
-	}: {
-		db: DynamoDBClient
-		TableName: string
-		idIndex: string
-		getByDeviceId: (
-			deviceId: string,
-		) => Promise<{ publicDevice: PublicDevice } | PublicDeviceRecordError>
-	}): ((
-		id: string,
-	) => Promise<{ publicDevice: PublicDevice } | PublicDeviceRecordError>) =>
-	async (id: string) => {
-		const { Items } = await db.send(
-			new QueryCommand({
-				TableName,
-				IndexName: idIndex,
-				KeyConditionExpression: '#id = :id',
-				ExpressionAttributeNames: {
-					'#id': 'id',
-					'#deviceId': 'secret__deviceId',
-				},
-				ExpressionAttributeValues: {
-					':id': {
-						S: id,
-					},
-				},
-				ProjectionExpression: '#id, #deviceId',
-			}),
-		)
-		const device = (Items ?? [])[0]
-		if (device === undefined) return { error: 'not_found' }
-		return await getByDeviceId(unmarshall(device).secret__deviceId)
-	}
+export const toPublic = (
+	device: PublicDeviceRecord,
+): Pick<PublicDeviceRecord, 'id' | 'model'> => ({
+	id: device.id,
+	model: device.model,
+})

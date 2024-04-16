@@ -95,6 +95,7 @@ runner
 			helloAPIBasePath,
 			db,
 			publicDevicesTableName: backendConfig.publicDevicesTableName,
+			idIndex: backendConfig.publicDevicesTableIdIndexName,
 		}),
 	)
 

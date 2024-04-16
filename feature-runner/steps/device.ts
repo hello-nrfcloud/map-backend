@@ -13,7 +13,7 @@ import { fingerprintGenerator } from '@hello.nrfcloud.com/proto/fingerprint'
 import { IMEI, email } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
 import type { HttpAPIMock } from '@bifravst/http-api-mock/mock'
 import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { publicDevicesRepo } from '../../sharing/publicDevicesRepo.js'
+import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
 import { models } from '@hello.nrfcloud.com/proto-map'
 
 const getCurrentWeekNumber = (): number => {
@@ -72,7 +72,11 @@ const oobDeviceWithFingerprint = (
 
 const modelIDs = Object.keys(models)
 
-const sharedDevice = (db: DynamoDBClient, publicDevicesTableName: string) =>
+const sharedDevice = (
+	db: DynamoDBClient,
+	publicDevicesTableName: string,
+	idIndex: string,
+) =>
 	regExpMatchedStep(
 		{
 			regExp:
@@ -95,6 +99,7 @@ const sharedDevice = (db: DynamoDBClient, publicDevicesTableName: string) =>
 				db,
 				TableName: publicDevicesTableName,
 				superUsersEmailDomain: 'example.com',
+				idIndex,
 			})
 			const d = await repo.share({
 				deviceId,
@@ -104,7 +109,7 @@ const sharedDevice = (db: DynamoDBClient, publicDevicesTableName: string) =>
 			})
 			if ('error' in d)
 				throw new Error(`Could not share device: ${d.error.message}!`)
-			context[publicIdStorageName] = d.publicDevice.id
+			context[publicIdStorageName] = d.device.id
 		},
 	)
 
@@ -142,14 +147,16 @@ export const steps = ({
 	helloAPIBasePath,
 	db,
 	publicDevicesTableName,
+	idIndex,
 }: {
 	iotData: IoTDataPlaneClient
 	httpApiMock: HttpAPIMock
 	helloAPIBasePath: string
 	db: DynamoDBClient
 	publicDevicesTableName: string
+	idIndex: string
 }): Array<StepRunner<Record<string, any>>> => [
 	publishDeviceMessage(iotData),
 	oobDeviceWithFingerprint(httpApiMock, helloAPIBasePath),
-	sharedDevice(db, publicDevicesTableName),
+	sharedDevice(db, publicDevicesTableName, idIndex),
 ]
