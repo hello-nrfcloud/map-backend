@@ -14,6 +14,7 @@ export class ShareAPI extends Construct {
 	public readonly shareFn: Lambda.IFunction
 	public readonly confirmOwnershipFn: Lambda.IFunction
 	public readonly sharingStatusFn: Lambda.IFunction
+	public readonly sharingStatusFingerprintFn: Lambda.IFunction
 	constructor(
 		parent: Construct,
 		{
@@ -27,7 +28,10 @@ export class ShareAPI extends Construct {
 			baseLayer: Lambda.ILayerVersion
 			lambdaSources: Pick<
 				BackendLambdas,
-				'shareDevice' | 'confirmOwnership' | 'sharingStatus'
+				| 'shareDevice'
+				| 'confirmOwnership'
+				| 'sharingStatus'
+				| 'sharingStatusFingerprint'
 			>
 		},
 	) {
@@ -109,5 +113,35 @@ export class ShareAPI extends Construct {
 			...new LambdaLogGroup(this, 'sharingStatusFnLogs'),
 		})
 		publicDevices.publicDevicesTable.grantReadData(this.sharingStatusFn)
+
+		this.sharingStatusFingerprintFn = new Lambda.Function(
+			this,
+			'sharingStatusFingerprintFn',
+			{
+				handler: lambdaSources.sharingStatusFingerprint.handler,
+				architecture: Lambda.Architecture.ARM_64,
+				runtime: Lambda.Runtime.NODEJS_20_X,
+				timeout: Duration.seconds(10),
+				memorySize: 1792,
+				code: Lambda.Code.fromAsset(
+					lambdaSources.sharingStatusFingerprint.zipFile,
+				),
+				description:
+					'Returns the sharing status of a device using the fingerprint.',
+				layers: [baseLayer],
+				environment: {
+					VERSION: this.node.getContext('version'),
+					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+					NODE_NO_WARNINGS: '1',
+					STACK_NAME: Stack.of(this).stackName,
+				},
+				...new LambdaLogGroup(this, 'sharingStatusFingerprintFnLogs'),
+				initialPolicy: [Permissions(Stack.of(this))],
+			},
+		)
+		publicDevices.publicDevicesTable.grantReadData(
+			this.sharingStatusFingerprintFn,
+		)
 	}
 }

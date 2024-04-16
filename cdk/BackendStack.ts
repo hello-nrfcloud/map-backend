@@ -133,6 +133,7 @@ export class BackendStack extends Stack {
 		})
 		api.addRoute('POST /share', shareAPI.shareFn)
 		api.addRoute('POST /share/confirm', shareAPI.confirmOwnershipFn)
+		api.addRoute('GET /share/status', shareAPI.sharingStatusFingerprintFn)
 		api.addRoute('GET /device/{id}', shareAPI.sharingStatusFn)
 
 		const devicesAPI = new DevicesAPI(this, {

@@ -7,6 +7,7 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	updatesToLwM2M: await pack('updatesToLwM2M'),
 	shareDevice: await pack('shareDevice'),
 	sharingStatus: await pack('sharingStatus'),
+	sharingStatusFingerprint: await pack('sharingStatusFingerprint'),
 	confirmOwnership: await pack('confirmOwnership'),
 	connectionInformationGeoLocation: await pack(
 		'connectionInformationGeoLocation',

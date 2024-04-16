@@ -4,6 +4,7 @@ type BackendLambdas = {
 	updatesToLwM2M: PackedLambda
 	shareDevice: PackedLambda
 	sharingStatus: PackedLambda
+	sharingStatusFingerprint: PackedLambda
 	confirmOwnership: PackedLambda
 	connectionInformationGeoLocation: PackedLambda
 	devicesData: PackedLambda
