@@ -133,3 +133,21 @@ And the last response should match
   "model": "PCA20035+solar"
 }
 ```
+
+## The sharing status of a device can be checked using the fingerprint
+
+> Users should be able to determine whether a certain device is sharing data
+
+When I `GET` to `${API}/share/status?fingerprint=${fingerprint}`
+
+Then I should receive a `https://github.com/hello-nrfcloud/proto-map/device`
+response
+
+And the last response should match
+
+```json
+{
+  "id": "${publicDeviceId}",
+  "model": "PCA20035+solar"
+}
+```

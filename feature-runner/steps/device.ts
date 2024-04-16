@@ -66,6 +66,7 @@ const oobDeviceWithFingerprint = (
 						model: 'PCA20035+solar',
 					}),
 				},
+				true,
 			)
 		},
 	)

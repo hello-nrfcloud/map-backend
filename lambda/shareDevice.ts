@@ -28,7 +28,8 @@ import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
 import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
 import middy from '@middy/core'
-import { getSettings } from '../settings/hello.js'
+import { getSettings } from '../hello/settings.js'
+import { helloApi } from '../hello/api.js'
 
 const {
 	publicDevicesTableName,
@@ -65,7 +66,7 @@ const { track, metrics } = metricsForComponent(
 	'hello-nrfcloud-map',
 )
 
-const hello = await getSettings({ ssm, stackName })
+const helloSettings = await getSettings({ ssm, stackName })
 
 const validateInput = validateWithTypeBox(
 	Type.Intersect([
@@ -89,6 +90,10 @@ const validateInput = validateWithTypeBox(
 	]),
 )
 
+const hello = helloApi({
+	endpoint: helloSettings.apiEndpoint,
+})
+
 const h = async (
 	event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
@@ -106,16 +111,13 @@ const h = async (
 	const { email } = maybeValidInput.value
 
 	if ('fingerprint' in maybeValidInput.value) {
-		// FIXME: validate fetch
-		// '@context': 'https://github.com/hello-nrfcloud/proto/deviceIdentity',
-		const { id: deviceId, model } = await (
-			await fetch(
-				new URL(
-					`./device?${new URLSearchParams({ fingerprint: maybeValidInput.value.fingerprint }).toString()}`,
-					hello.apiEndpoint,
-				),
-			)
-		).json()
+		const maybeDevice = await hello.getDeviceByFingerprint(
+			maybeValidInput.value.fingerprint,
+		)
+		if ('error' in maybeDevice) {
+			return aProblem(maybeDevice.error)
+		}
+		const { id: deviceId, model } = maybeDevice.result
 		return publish({
 			deviceId,
 			model,
