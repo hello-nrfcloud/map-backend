@@ -1,12 +1,8 @@
-import { models } from '@hello.nrfcloud.com/proto-map'
-import { DeviceId } from '@hello.nrfcloud.com/proto-map/api'
-import type { ProblemDetail } from '@hello.nrfcloud.com/proto/hello'
-import { Type, type Static } from '@sinclair/typebox'
-import { typedFetch } from './typedFetch.js'
-
-const Model = Type.Union(
-	Object.keys(models).map((model) => Type.Literal(model)),
-)
+import {
+	DeviceIdentity,
+	typedFetch,
+	type TypedFetchResponse,
+} from '@hello.nrfcloud.com/proto/hello'
 
 export const helloApi = ({
 	endpoint,
@@ -15,29 +11,21 @@ export const helloApi = ({
 	endpoint: URL
 	fetchImplementation?: typeof fetch
 }): {
-	getDeviceByFingerprint: (fingerprint: string) => Promise<
-		| {
-				error: Omit<Static<typeof ProblemDetail>, '@context'>
-		  }
-		| {
-				result: {
-					id: string
-					model: Static<typeof Model>
-				}
-		  }
-	>
-} => ({
-	getDeviceByFingerprint: async (fingerprint: string) =>
-		typedFetch({
-			url: new URL(
-				`./device?${new URLSearchParams({ fingerprint }).toString()}`,
-				endpoint,
+	getDeviceByFingerprint: (
+		fingerprint: string,
+	) => Promise<TypedFetchResponse<typeof DeviceIdentity>>
+} => {
+	const getDeviceByFingerprintRequest = typedFetch({
+		responseBodySchema: DeviceIdentity,
+		fetchImplementation,
+	})
+	return {
+		getDeviceByFingerprint: async (fingerprint: string) =>
+			getDeviceByFingerprintRequest(
+				new URL(
+					`./device?${new URLSearchParams({ fingerprint }).toString()}`,
+					endpoint,
+				),
 			),
-			RequestBodySchema: Type.Undefined(),
-			ResponseBodySchema: Type.Object({
-				id: DeviceId,
-				model: Model,
-			}),
-			fetchImplementation,
-		})(),
-})
+	}
+}
