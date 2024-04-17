@@ -15,7 +15,7 @@ import {
 	IoTActionRole,
 } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import { Permissions as SettingsPermissions } from '@hello.nrfcloud.com/nrfcloud-api-helpers/cdk'
-import type { BackendLambdas } from '../BackendLambdas.js'
+import type { BackendLambdas } from '../packBackendLambdas.js'
 
 /**
  * Resources that geo-location devices based on the LwM2M Connection Information

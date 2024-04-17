@@ -7,7 +7,7 @@ import {
 	Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { BackendLambdas } from '../BackendLambdas.js'
+import type { BackendLambdas } from '../packBackendLambdas.js'
 import { STACK_NAME } from '../stackConfig.js'
 import type { PublicDevices } from './PublicDevices.js'
 

@@ -7,7 +7,7 @@ import {
 import { Construct } from 'constructs'
 import type { PublicDevices } from './PublicDevices.js'
 import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import type { BackendLambdas } from '../BackendLambdas.js'
+import type { BackendLambdas } from '../packBackendLambdas.js'
 import { Permissions } from '@hello.nrfcloud.com/nrfcloud-api-helpers/cdk'
 
 export class ShareAPI extends Construct {

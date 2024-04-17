@@ -1,5 +1,22 @@
-import type { BackendLambdas } from './BackendLambdas.js'
 import { packLambdaFromPath } from '@bifravst/aws-cdk-lambda-helpers'
+import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
+
+export type BackendLambdas = {
+	updatesToLwM2M: PackedLambda
+	shareDevice: PackedLambda
+	sharingStatus: PackedLambda
+	sharingStatusFingerprint: PackedLambda
+	confirmOwnership: PackedLambda
+	connectionInformationGeoLocation: PackedLambda
+	devicesData: PackedLambda
+	storeObjectsInTimestream: PackedLambda
+	queryHistory: PackedLambda
+	createCredentials: PackedLambda
+	openSSL: PackedLambda
+	senMLToLwM2M: PackedLambda
+	senMLImportLogs: PackedLambda
+	apiHealthCheck: PackedLambda
+}
 
 const pack = async (id: string) => packLambdaFromPath(id, `lambda/${id}.ts`)
 

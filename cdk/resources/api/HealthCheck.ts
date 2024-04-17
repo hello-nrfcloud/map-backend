@@ -1,7 +1,7 @@
 import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import { Duration, aws_lambda as Lambda } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { BackendLambdas } from '../../BackendLambdas.js'
+import type { BackendLambdas } from '../../packBackendLambdas.js'
 
 /**
  * API health check

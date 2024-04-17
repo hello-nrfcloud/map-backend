@@ -2,7 +2,7 @@ import { Duration, aws_iam as IAM, aws_lambda as Lambda } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import type { PublicDevices } from './PublicDevices.js'
 import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import type { BackendLambdas } from '../BackendLambdas.js'
+import type { BackendLambdas } from '../packBackendLambdas.js'
 
 export class DevicesAPI extends Construct {
 	public readonly devicesFn: Lambda.IFunction

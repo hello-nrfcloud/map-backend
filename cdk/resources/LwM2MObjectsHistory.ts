@@ -12,7 +12,7 @@ import {
 	LambdaLogGroup,
 	LambdaSource,
 } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import type { BackendLambdas } from '../BackendLambdas.js'
+import type { BackendLambdas } from '../packBackendLambdas.js'
 
 /**
  * Store history of LwM2M objects
