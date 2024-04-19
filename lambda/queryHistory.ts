@@ -12,10 +12,14 @@ import {
 	isLwM2MObjectID,
 	type LWM2MObjectInfo,
 } from '@hello.nrfcloud.com/proto-map'
-import { PublicDeviceId } from '@hello.nrfcloud.com/proto-map/api'
+import {
+	Context,
+	PublicDeviceId,
+	ResourceHistory,
+} from '@hello.nrfcloud.com/proto-map/api'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import { parseResult } from '@nordicsemiconductor/timestream-helpers'
-import { Type } from '@sinclair/typebox'
+import { Type, type Static } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
@@ -53,6 +57,16 @@ const validateInput = validateWithTypeBox(
 	}),
 )
 
+// TODO: cache globally
+const availableColumns =
+	(
+		await ts.send(
+			new QueryCommand({
+				QueryString: `SELECT * FROM "${DatabaseName}"."${TableName}" LIMIT 1`,
+			}),
+		)
+	)?.ColumnInfo?.map(({ Name }) => Name) ?? []
+
 const h = async (
 	event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
@@ -81,26 +95,27 @@ const h = async (
 	const def = definitions[ObjectID]
 
 	try {
-		const res = await queryResourceHistory({
+		const history = await queryResourceHistory({
 			def,
 			instance: InstanceID,
 			deviceId,
 		})
+		const result: Static<typeof ResourceHistory> = {
+			'@context': Context.history.resource.toString(),
+			query: {
+				ObjectID,
+				ObjectVersion: def.ObjectVersion,
+				ObjectInstanceID: InstanceID,
+				deviceId,
+				binIntervalMinutes,
+			},
+			partialInstances: history,
+		}
 		return aResponse(
 			200,
 			{
-				// FIXME: add to proto-map
-				'@context': new URL(
-					'https://github.com/hello-nrfcloud/proto-map/history',
-				),
-				query: {
-					ObjectID,
-					ObjectVersion: def.ObjectVersion,
-					InstanceID,
-					deviceId,
-					binIntervalMinutes,
-				},
-				partialInstances: res,
+				...result,
+				'@context': Context.history.resource,
 			},
 			binIntervalMinutes * 60,
 		)
@@ -131,17 +146,9 @@ const queryResourceHistory = async ({
 	def: LWM2MObjectInfo
 	instance: number
 	deviceId: string
-}) => {
-	// TODO: cache
-	const availableColumns =
-		(
-			await ts.send(
-				new QueryCommand({
-					QueryString: `SELECT * FROM "${DatabaseName}"."${TableName}" LIMIT 1`,
-				}),
-			)
-		)?.ColumnInfo?.map(({ Name }) => Name) ?? []
-
+}): Promise<
+	Array<Record<number, string | number | boolean> & { ts: string }>
+> => {
 	const resourceNames = Object.values(def.Resources)
 		.filter(isNumeric)
 		.map<[string, number]>(({ ResourceID }) => [

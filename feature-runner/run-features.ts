@@ -25,15 +25,15 @@ import { slashless } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 const iotData = new IoTDataPlaneClient({})
 const db = new DynamoDBClient({})
 
-const backendConfig = await stackOutput(
-	new CloudFormationClient({}),
-)<BackendStackOutputs>(STACK_NAME)
-
 const { mockApiEndpoint, responsesTableName } = fromEnv({
 	mockApiEndpoint: 'HTTP_API_MOCK_API_URL',
 	responsesTableName: 'HTTP_API_MOCK_RESPONSES_TABLE_NAME',
 	requestsTableName: 'HTTP_API_MOCK_REQUESTS_TABLE_NAME',
 })(process.env)
+
+const backendConfig = await stackOutput(
+	new CloudFormationClient({}),
+)<BackendStackOutputs>(STACK_NAME)
 
 const print = (arg: unknown) =>
 	typeof arg === 'object' ? JSON.stringify(arg) : arg
