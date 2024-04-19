@@ -18,17 +18,20 @@ import { logMetrics } from '@aws-lambda-powertools/metrics/middleware'
 import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
 import { MetricUnit } from '@aws-lambda-powertools/metrics'
 import { NRF_CLOUD_ACCOUNT } from '../settings/account.js'
+import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 
 const {
 	backendStackName,
 	openSslLambdaFunctionName,
 	publicDevicesTableName,
 	idIndex,
+	version,
 } = fromEnv({
 	backendStackName: 'BACKEND_STACK_NAME',
 	openSslLambdaFunctionName: 'OPENSSL_LAMBDA_FUNCTION_NAME',
 	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
 	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
+	version: 'VERSION',
 })({
 	STACK_NAME,
 	...process.env,
@@ -145,6 +148,7 @@ const h = async (
 }
 
 export const handler = middy()
+	.use(addVersionHeader(version))
 	.use(corsOPTIONS('POST'))
 	.use(logMetrics(metrics))
 	.handler(h)
