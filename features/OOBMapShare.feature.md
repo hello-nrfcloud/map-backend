@@ -4,8 +4,6 @@ exampleContext:
   deviceId: oob-352656108602296
   publicDeviceId: outfling-swanherd-attaghan
   API: "https://api.nordicsemi.world/2024-04-15"
-  ts: 1694503339523
-  tsISO: 2023-09-12T00:00:00.000Z
 ---
 
 # Sharing an out-of-box experience device on the map
@@ -61,60 +59,6 @@ When I `POST` to `${API}/share/confirm` with
 Then I should receive a
 `https://github.com/hello-nrfcloud/proto-map/share-device-ownership-confirmed`
 response
-
-## The devices publishes data
-
-> Once a device has been shared, its data will be publicly available.  
-> Devices publish using their own protocol, and it is converted to LwM2M
-> according to the definitions in https://github.com/hello-nrfcloud/proto-lwm2m/
->
-> Note: this uses the old asset_tracker_v2 protocol for now, but this will be
-> replaced by CoAP in the future.
-
-Given I store `$millis()` into `ts`
-
-And I store `$fromMillis(${ts})` into `tsISO`
-
-And the device `${deviceId}` publishes this message to the topic
-`m/d/${deviceId}/d2c`
-
-```json
-{
-  "appId": "SOLAR",
-  "messageType": "DATA",
-  "data": "3.123457",
-  "ts": "$number{ts}"
-}
-```
-
-## Access devices using their public ID
-
-> The public id will be shown on the map, and users can also provide a list of
-> public ids to select a set of devices they are interested in
-
-When I `GET` `${API}/devices?ids=${publicDeviceId}`
-
-Then I should receive a `https://github.com/hello-nrfcloud/proto-map/devices`
-response
-
-And `$.devices[id="${publicDeviceId}"]` of the last response should match
-
-```json
-{
-  "id": "${publicDeviceId}",
-  "model": "PCA20035+solar",
-  "state": [
-    {
-      "ObjectID": 14210,
-      "ObjectVersion": "1.0",
-      "Resources": {
-        "0": 3.123457,
-        "99": "${tsISO}"
-      }
-    }
-  ]
-}
-```
 
 ## The sharing status of a device can be checked using the device ID
 

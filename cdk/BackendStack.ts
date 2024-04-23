@@ -8,15 +8,11 @@ import {
 import type { BackendLambdas } from './packBackendLambdas.js'
 import type { PackedLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
 import { LambdaSource } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import { ConnectionInformationGeoLocation } from './resources/ConnectionInformationGeoLocation.js'
-import { LwM2MShadow } from './resources/LwM2MShadow.js'
 import { PublicDevices } from './resources/PublicDevices.js'
 import { ShareAPI } from './resources/ShareAPI.js'
 import { STACK_NAME } from './stackConfig.js'
 import { DevicesAPI } from './resources/DevicesAPI.js'
-import { LwM2MObjectsHistory } from './resources/LwM2MObjectsHistory.js'
 import { CustomDevicesAPI } from './resources/CustomDevicesAPI.js'
-import { SenMLMessages } from './resources/SenMLMessage.js'
 import { ContainerRepositoryId } from '../aws/ecr.js'
 import { repositoryName } from '@bifravst/aws-cdk-ecr-helpers/repository'
 import { ContinuousDeployment } from '@bifravst/ci'
@@ -107,24 +103,6 @@ export class BackendStack extends Stack {
 			})
 		}
 
-		new LwM2MShadow(this, {
-			baseLayer,
-			lambdaSources,
-			publicDevices,
-		})
-
-		const senMLMessages = new SenMLMessages(this, {
-			baseLayer,
-			lambdaSources,
-			publicDevices,
-		})
-		api.addRoute('GET /device/{id}/senml-imports', senMLMessages.importLogsFn)
-
-		new ConnectionInformationGeoLocation(this, {
-			baseLayer,
-			lambdaSources,
-		})
-
 		const shareAPI = new ShareAPI(this, {
 			domain,
 			baseLayer,
@@ -142,12 +120,6 @@ export class BackendStack extends Stack {
 			publicDevices,
 		})
 		api.addRoute('GET /devices', devicesAPI.devicesFn)
-
-		const lwm2mObjectHistory = new LwM2MObjectsHistory(this, {
-			baseLayer,
-			lambdaSources,
-		})
-		api.addRoute('GET /history', lwm2mObjectHistory.historyFn)
 
 		const customDevicesAPI = new CustomDevicesAPI(this, {
 			baseLayer,
