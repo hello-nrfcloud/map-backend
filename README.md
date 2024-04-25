@@ -16,10 +16,9 @@ using [AWS CDK](https://aws.amazon.com/cdk) in
 
 ### Setup
 
-Provide your AWS credentials, for example using the `.envrc` (see
-[the example](.envrc.example)).
+[Provide your AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-authentication.html).
 
-### Install the dependencies
+Install the dependencies:
 
 ```bash
 npm ci
