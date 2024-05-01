@@ -31,7 +31,7 @@
     "@aws-sdk/client-dynamodb": "3.565.0",
     "@aws-sdk/client-ecr": "3.565.0",
     "@aws-sdk/client-iot-data-plane": "3.565.0",
-    "@bifravst/aws-cdk-ecr-helpers": "1.2.2",
+    "@bifravst/aws-cdk-ecr-helpers": "1.2.3",
     "@bifravst/aws-cdk-lambda-helpers": "1.7.4",
     "@bifravst/aws-ssm-settings-helpers": "1.1.4",
     "@bifravst/ci": "2.0.1",
