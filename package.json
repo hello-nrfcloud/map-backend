@@ -44,7 +44,7 @@
     "@nordicsemiconductor/bdd-markdown": "8.1.11",
     "@nordicsemiconductor/cloudformation-helpers": "9.0.3",
     "@swc/cli": "0.3.12",
-    "@swc/core": "1.5.3",
+    "@swc/core": "1.5.5",
     "@types/aws-lambda": "8.10.137",
     "@types/lodash-es": "4.17.12",
     "aws-cdk": "2.140.0",
