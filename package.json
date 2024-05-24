@@ -32,7 +32,7 @@
     "@aws-sdk/client-ecr": "3.572.0",
     "@aws-sdk/client-iot-data-plane": "3.572.0",
     "@bifravst/aws-cdk-ecr-helpers": "1.2.6",
-    "@bifravst/aws-cdk-lambda-helpers": "1.7.12",
+    "@bifravst/aws-cdk-lambda-helpers": "1.7.33",
     "@bifravst/aws-ssm-settings-helpers": "1.1.10",
     "@bifravst/ci": "2.0.1",
     "@bifravst/eslint-config-typescript": "6.0.25",
