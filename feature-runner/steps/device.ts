@@ -63,7 +63,7 @@ const oobDeviceWithFingerprint = (
 						'@context':
 							'https://github.com/hello-nrfcloud/proto/deviceIdentity',
 						id: deviceId,
-						model: 'PCA20035+solar',
+						model: 'thingy91x',
 					}),
 				},
 				true,

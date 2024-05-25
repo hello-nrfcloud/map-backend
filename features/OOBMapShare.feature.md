@@ -74,7 +74,7 @@ And the last response should match
 ```json
 {
   "id": "${publicDeviceId}",
-  "model": "PCA20035+solar"
+  "model": "thingy91x"
 }
 ```
 
@@ -92,6 +92,6 @@ And the last response should match
 ```json
 {
   "id": "${publicDeviceId}",
-  "model": "PCA20035+solar"
+  "model": "thingy91x"
 }
 ```
