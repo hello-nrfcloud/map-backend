@@ -1,11 +1,7 @@
 import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import { Permissions as SettingsPermissions } from '@bifravst/aws-ssm-settings-helpers/cdk'
-import {
-	Duration,
-	aws_ecr as ECR,
-	aws_lambda as Lambda,
-	Stack,
-} from 'aws-cdk-lib'
+import type { aws_ecr as ECR } from 'aws-cdk-lib'
+import { Duration, aws_lambda as Lambda, Stack } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import type { BackendLambdas } from '../packBackendLambdas.js'
 import { STACK_NAME } from '../stackConfig.js'

@@ -1,6 +1,6 @@
 import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { SSMClient } from '@aws-sdk/client-ssm'
-import { models } from '@hello.nrfcloud.com/proto-map'
+import type { SSMClient } from '@aws-sdk/client-ssm'
+import { models } from '@hello.nrfcloud.com/proto-map/models'
 import type { Environment } from 'aws-cdk-lib'
 import chalk from 'chalk'
 import { randomUUID } from 'node:crypto'

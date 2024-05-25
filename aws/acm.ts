@@ -1,8 +1,5 @@
-import {
-	ACMClient,
-	CertificateStatus,
-	ListCertificatesCommand,
-} from '@aws-sdk/client-acm'
+import type { ACMClient } from '@aws-sdk/client-acm'
+import { CertificateStatus, ListCertificatesCommand } from '@aws-sdk/client-acm'
 import chalk from 'chalk'
 
 export type DomainCert = {

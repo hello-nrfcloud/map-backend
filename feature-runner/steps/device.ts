@@ -14,7 +14,7 @@ import { IMEI, email } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
 import type { HttpAPIMock } from '@bifravst/http-api-mock/mock'
 import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
-import { models } from '@hello.nrfcloud.com/proto-map'
+import { models } from '@hello.nrfcloud.com/proto-map/models'
 
 const getCurrentWeekNumber = (): number => {
 	const now = new Date()

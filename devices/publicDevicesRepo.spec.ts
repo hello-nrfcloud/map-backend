@@ -10,7 +10,7 @@ import {
 	alphabet,
 	numbers,
 } from '@hello.nrfcloud.com/proto/fingerprint'
-import { ModelID } from '@hello.nrfcloud.com/proto-map'
+import { ModelID } from '@hello.nrfcloud.com/proto-map/models'
 
 void describe('publicDevicesRepo()', () => {
 	void describe('getByDeviceId()', () => {
@@ -22,7 +22,7 @@ void describe('publicDevicesRepo()', () => {
 					Item: marshall({
 						id,
 						secret__deviceId: 'some-device',
-						model: 'asset_tracker_v2+AWS',
+						model: 'thingy91x',
 						ownerConfirmed: ownerConfirmed.toISOString(),
 					}),
 				}),
@@ -38,7 +38,7 @@ void describe('publicDevicesRepo()', () => {
 				{
 					device: {
 						id,
-						model: 'asset_tracker_v2+AWS',
+						model: 'thingy91x',
 						secret__deviceId: 'some-device',
 						ownerConfirmed: ownerConfirmed.toISOString(),
 					},
@@ -79,7 +79,7 @@ void describe('publicDevicesRepo()', () => {
 				idIndex: 'idIndex',
 			}).share({
 				deviceId: 'some-device',
-				model: 'asset_tracker_v2+AWS',
+				model: 'thingy91x',
 				email: 'alex@example.com',
 			})
 
@@ -184,7 +184,7 @@ void describe('getById()', () => {
 					Item: marshall({
 						id,
 						secret__deviceId: 'some-device',
-						model: 'asset_tracker_v2+AWS',
+						model: 'thingy91x',
 						ownerConfirmed: new Date().toISOString(),
 					}),
 				}),
@@ -229,7 +229,7 @@ void describe('getById()', () => {
 
 		assert.deepEqual('device' in res && toPublic(res.device), {
 			id,
-			model: 'asset_tracker_v2+AWS',
+			model: 'thingy91x',
 		})
 	})
 })
@@ -240,7 +240,7 @@ void describe('toPublic()', () => {
 		const record = toPublic({
 			id,
 			secret__deviceId: 'some-device',
-			model: ModelID.PCA20035_solar,
+			model: ModelID.Thingy91x,
 			ownerConfirmed: new Date(),
 			ownerEmail: 'alex@example.com',
 			ownershipConfirmationToken: '123456',
@@ -249,7 +249,7 @@ void describe('toPublic()', () => {
 		})
 		assert.deepEqual(record, {
 			id,
-			model: ModelID.PCA20035_solar,
+			model: ModelID.Thingy91x,
 		})
 		assert.equal(
 			Object.values(record as Record<string, any>).includes('some-device'),
