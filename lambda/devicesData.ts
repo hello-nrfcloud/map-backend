@@ -13,7 +13,7 @@ import {
 	formatTypeBoxErrors,
 	validateWithTypeBox,
 } from '@hello.nrfcloud.com/proto'
-import { models } from '@hello.nrfcloud.com/proto-map'
+import { models } from '@hello.nrfcloud.com/proto-map/models'
 import { Context } from '@hello.nrfcloud.com/proto-map/api'
 import { PublicDeviceId } from '@hello.nrfcloud.com/proto-map/api'
 import { fromEnv } from '@nordicsemiconductor/from-env'

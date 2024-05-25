@@ -1,9 +1,6 @@
 import { Construct } from 'constructs'
-import {
-	aws_apigatewayv2 as HttpApi,
-	Reference,
-	ResolutionTypeHint,
-} from 'aws-cdk-lib'
+import type { Reference } from 'aws-cdk-lib'
+import { aws_apigatewayv2 as HttpApi, ResolutionTypeHint } from 'aws-cdk-lib'
 import type { DomainCert } from '../../../aws/acm.js'
 import type { API } from './API.js'
 
