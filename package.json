@@ -104,7 +104,7 @@
     "@hello.nrfcloud.com/nrfcloud-api-helpers": "3.0.58",
     "@hello.nrfcloud.com/proto": "12.0.4",
     "@hello.nrfcloud.com/proto-map": "9.2.0",
-    "@middy/core": "5.3.5",
+    "@middy/core": "5.4.0",
     "@nordicsemiconductor/from-env": "3.0.1",
     "@nordicsemiconductor/random-words": "8.0.1",
     "@nordicsemiconductor/timestream-helpers": "6.0.2",
