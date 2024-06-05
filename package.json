@@ -35,7 +35,7 @@
     "@bifravst/aws-cdk-lambda-helpers": "1.7.41",
     "@bifravst/aws-ssm-settings-helpers": "1.1.26",
     "@bifravst/ci": "2.0.1",
-    "@bifravst/eslint-config-typescript": "6.1.1",
+    "@bifravst/eslint-config-typescript": "6.1.2",
     "@bifravst/http-api-mock": "1.4.73",
     "@bifravst/prettier-config": "1.0.1",
     "@bifravst/run": "1.2.0",
