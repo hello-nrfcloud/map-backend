@@ -60,7 +60,7 @@
     "jsonata": "2.0.5",
     "semver": "7.6.2",
     "tsmatchers": "5.0.2",
-    "tsx": "4.11.2"
+    "tsx": "4.14.0"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
