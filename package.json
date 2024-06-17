@@ -60,7 +60,7 @@
     "jsonata": "2.0.5",
     "semver": "7.6.2",
     "tsmatchers": "5.0.2",
-    "tsx": "4.15.5"
+    "tsx": "4.15.6"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
@@ -100,9 +100,9 @@
     "@aws-sdk/client-ssm": "3.598.0",
     "@aws-sdk/util-dynamodb": "3.598.0",
     "@hello.nrfcloud.com/certificate-helpers": "1.0.0",
-    "@hello.nrfcloud.com/lambda-helpers": "1.2.9",
-    "@hello.nrfcloud.com/nrfcloud-api-helpers": "5.2.8",
-    "@hello.nrfcloud.com/proto": "13.3.2",
+    "@hello.nrfcloud.com/lambda-helpers": "1.2.10",
+    "@hello.nrfcloud.com/nrfcloud-api-helpers": "5.2.9",
+    "@hello.nrfcloud.com/proto": "14.0.0",
     "@hello.nrfcloud.com/proto-map": "12.1.3",
     "@middy/core": "5.4.0",
     "@nordicsemiconductor/from-env": "3.0.1",
