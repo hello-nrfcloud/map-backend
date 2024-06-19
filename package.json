@@ -101,7 +101,7 @@
     "@aws-sdk/util-dynamodb": "3.600.0",
     "@hello.nrfcloud.com/certificate-helpers": "1.0.0",
     "@hello.nrfcloud.com/lambda-helpers": "1.2.13",
-    "@hello.nrfcloud.com/nrfcloud-api-helpers": "5.2.11",
+    "@hello.nrfcloud.com/nrfcloud-api-helpers": "5.2.13",
     "@hello.nrfcloud.com/proto": "14.0.2",
     "@hello.nrfcloud.com/proto-map": "13.0.1",
     "@middy/core": "5.4.1",
