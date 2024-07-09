@@ -1,8 +1,8 @@
-import { Duration, aws_iam as IAM, aws_lambda as Lambda } from 'aws-cdk-lib'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
+import { aws_iam as IAM, type aws_lambda as Lambda } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { PublicDevices } from './PublicDevices.js'
-import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import type { BackendLambdas } from '../packBackendLambdas.js'
+import type { PublicDevices } from './PublicDevices.js'
 
 export class DevicesAPI extends Construct {
 	public readonly devicesFn: Lambda.IFunction
@@ -21,32 +21,28 @@ export class DevicesAPI extends Construct {
 	) {
 		super(parent, 'devicesAPI')
 
-		this.devicesFn = new Lambda.Function(this, 'devicesFn', {
-			handler: lambdaSources.devicesData.handler,
-			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_20_X,
-			timeout: Duration.minutes(1),
-			memorySize: 1792,
-			code: Lambda.Code.fromAsset(lambdaSources.devicesData.zipFile),
-			description:
-				'Provides the data of the public devices to the map frontend',
-			layers: [baseLayer],
-			environment: {
-				VERSION: this.node.getContext('version'),
-				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
-				PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
-				PUBLIC_DEVICES_TABLE_MODEL_OWNER_CONFIRMED_INDEX_NAME:
-					publicDevices.publicDevicesTableModelOwnerConfirmedIndex,
-				NODE_NO_WARNINGS: '1',
+		this.devicesFn = new PackedLambdaFn(
+			this,
+			'devicesFn',
+			lambdaSources.devicesData,
+			{
+				description:
+					'Provides the data of the public devices to the map frontend',
+				layers: [baseLayer],
+				environment: {
+					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+					PUBLIC_DEVICES_TABLE_MODEL_OWNER_CONFIRMED_INDEX_NAME:
+						publicDevices.publicDevicesTableModelOwnerConfirmedIndex,
+				},
+				initialPolicy: [
+					new IAM.PolicyStatement({
+						actions: ['iot:GetThingShadow'],
+						resources: ['*'],
+					}),
+				],
 			},
-			...new LambdaLogGroup(this, 'devicesFnLogs'),
-			initialPolicy: [
-				new IAM.PolicyStatement({
-					actions: ['iot:GetThingShadow'],
-					resources: ['*'],
-				}),
-			],
-		})
+		).fn
 		publicDevices.publicDevicesTable.grantReadData(this.devicesFn)
 	}
 }

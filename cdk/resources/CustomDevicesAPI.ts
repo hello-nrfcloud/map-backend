@@ -1,7 +1,9 @@
-import { LambdaLogGroup } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import { Permissions as SettingsPermissions } from '@bifravst/aws-ssm-settings-helpers/cdk'
+import {
+	LambdaLogGroup,
+	PackedLambdaFn,
+} from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import type { aws_ecr as ECR } from 'aws-cdk-lib'
-import { Duration, aws_lambda as Lambda, Stack } from 'aws-cdk-lib'
+import { Duration, aws_lambda as Lambda } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import type { BackendLambdas } from '../packBackendLambdas.js'
 import { STACK_NAME } from '../stackConfig.js'
@@ -47,26 +49,21 @@ export class CustomDevicesAPI extends Construct {
 			...new LambdaLogGroup(this, 'openSSLFnLogs'),
 		})
 
-		this.createCredentials = new Lambda.Function(this, 'createCredentialsFn', {
-			handler: lambdaSources.createCredentials.handler,
-			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_20_X,
-			timeout: Duration.seconds(10),
-			memorySize: 1792,
-			code: Lambda.Code.fromAsset(lambdaSources.createCredentials.zipFile),
-			description: 'Allows users to create credentials for custom',
-			layers: [baseLayer],
-			environment: {
-				VERSION: this.node.getContext('version'),
-				NODE_NO_WARNINGS: '1',
-				BACKEND_STACK_NAME: STACK_NAME,
-				OPENSSL_LAMBDA_FUNCTION_NAME: openSSLFn.functionName,
-				PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
-				PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+		this.createCredentials = new PackedLambdaFn(
+			this,
+			'createCredentialsFn',
+			lambdaSources.createCredentials,
+			{
+				description: 'Allows users to create credentials for custom devices',
+				layers: [baseLayer],
+				environment: {
+					BACKEND_STACK_NAME: STACK_NAME,
+					OPENSSL_LAMBDA_FUNCTION_NAME: openSSLFn.functionName,
+					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+				},
 			},
-			...new LambdaLogGroup(this, 'createCredentialsFnLogs'),
-			initialPolicy: [SettingsPermissions(Stack.of(this))],
-		})
+		).fn
 		openSSLFn.grantInvoke(this.createCredentials)
 		publicDevices.publicDevicesTable.grantReadData(this.createCredentials)
 	}

@@ -22,13 +22,13 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { shadowToObjects } from '../lwm2m/shadowToObjects.js'
 import { consentDurationMS } from '../devices/consentDuration.js'
 import middy from '@middy/core'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { shadowToObjects } from '@hello.nrfcloud.com/proto-map/lwm2m/aws'
 
 const {
 	publicDevicesTableName,
