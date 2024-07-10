@@ -18,6 +18,7 @@ import { logsCommand } from './commands/logs.js'
 import { CloudWatchLogsClient } from '@aws-sdk/client-cloudwatch-logs'
 import { configureHello } from './commands/configure-hello.js'
 import { shareDevice } from './commands/share-device.js'
+import { listDevicesCommand } from './commands/listDevices.js'
 
 const ssm = new SSMClient({})
 const db = new DynamoDBClient({})
@@ -78,6 +79,10 @@ const CLI = async ({ isCI }: { isCI: boolean }) => {
 					db,
 					publicDevicesTableName: backendOutputs.publicDevicesTableName,
 					idIndex: backendOutputs.publicDevicesTableIdIndexName,
+				}),
+				listDevicesCommand({
+					db,
+					publicDevicesTableName: backendOutputs.publicDevicesTableName,
 				}),
 			)
 		} catch (error) {
