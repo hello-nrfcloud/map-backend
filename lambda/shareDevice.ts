@@ -10,14 +10,13 @@ import {
 import { Context, Model } from '@hello.nrfcloud.com/proto-map/api'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import { Type } from '@sinclair/typebox'
-import {
-	type APIGatewayProxyEventV2,
-	type APIGatewayProxyResultV2,
+import type {
+	APIGatewayProxyEventV2,
+	APIGatewayProxyResultV2,
 } from 'aws-lambda'
 import { randomUUID } from 'node:crypto'
 import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
 import { sendOwnershipVerificationEmail } from './sendOwnershipVerificationEmail.js'
-
 import { MetricUnit } from '@aws-lambda-powertools/metrics'
 import { logMetrics } from '@aws-lambda-powertools/metrics/middleware'
 import { SSMClient } from '@aws-sdk/client-ssm'
@@ -30,6 +29,7 @@ import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
 import middy from '@middy/core'
 import { getSettings } from '../hello/settings.js'
 import { helloApi } from '../hello/api.js'
+import { Email } from '../util/validation/email.js'
 
 const {
 	publicDevicesTableName,
@@ -81,11 +81,7 @@ const validateInput = validateWithTypeBox(
 			}),
 		]),
 		Type.Object({
-			email: Type.RegExp(/.+@.+/, {
-				title: 'Email',
-				description:
-					'The email of the owner of the device. They have to confirm the publication of the device every 30 days.',
-			}),
+			email: Email,
 		}),
 	]),
 )
