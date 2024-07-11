@@ -1,5 +1,4 @@
 import type { CloudFormationClient } from '@aws-sdk/client-cloudformation'
-import { DescribeStackResourcesCommand } from '@aws-sdk/client-cloudformation'
 import type { CloudWatchLogsClient } from '@aws-sdk/client-cloudwatch-logs'
 import {
 	DeleteLogGroupCommand,
@@ -8,6 +7,7 @@ import {
 } from '@aws-sdk/client-cloudwatch-logs'
 import chalk from 'chalk'
 import type { CommandDefinition } from './CommandDefinition.js'
+import { listStackResources } from '@nordicsemiconductor/cloudformation-helpers'
 
 export const logsCommand = ({
 	stackName,
@@ -48,17 +48,12 @@ export const logsCommand = ({
 		deleteLogGroups,
 		age,
 	}) => {
-		const logGroups =
-			(
-				await cf.send(
-					new DescribeStackResourcesCommand({ StackName: stackName }),
-				)
-			).StackResources?.filter(({ ResourceType }) =>
-				['AWS::Logs::LogGroup', 'Custom::LogRetention'].includes(
-					ResourceType ?? '',
-				),
-			)?.map(({ PhysicalResourceId }) => PhysicalResourceId as string) ??
-			([] as string[])
+		const logGroups = (
+			await listStackResources(cf, stackName, [
+				'AWS::Logs::LogGroup',
+				'Custom::LogRetention',
+			])
+		).map(({ PhysicalResourceId }) => PhysicalResourceId)
 
 		if (deleteLogGroups === true) {
 			await Promise.all(
