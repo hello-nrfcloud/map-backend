@@ -12,7 +12,7 @@ import { PublicDevices } from './resources/PublicDevices.js'
 import { ShareAPI } from './resources/ShareAPI.js'
 import { STACK_NAME } from './stackConfig.js'
 import { DevicesAPI } from './resources/DevicesAPI.js'
-import { CustomDevicesAPI } from './resources/CustomDevicesAPI.js'
+import { CredentialsAPI } from './resources/CredentialsAPI.js'
 import { ContainerRepositoryId } from '../aws/ecr.js'
 import { repositoryName } from '@bifravst/aws-cdk-ecr-helpers/repository'
 import { ContinuousDeployment } from '@bifravst/ci'
@@ -121,7 +121,7 @@ export class BackendStack extends Stack {
 		})
 		api.addRoute('GET /devices', devicesAPI.devicesFn)
 
-		const customDevicesAPI = new CustomDevicesAPI(this, {
+		const credentialsAPI = new CredentialsAPI(this, {
 			baseLayer,
 			lambdaSources,
 			openSSLContainerImage: {
@@ -138,7 +138,7 @@ export class BackendStack extends Stack {
 			publicDevices,
 		})
 
-		api.addRoute('POST /credentials', customDevicesAPI.createCredentials)
+		api.addRoute('POST /credentials', credentialsAPI.createCredentials)
 
 		// CD
 

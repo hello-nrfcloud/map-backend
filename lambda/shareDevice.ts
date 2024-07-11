@@ -75,7 +75,7 @@ const validateInput = validateWithTypeBox(
 			Type.Object({
 				fingerprint: Type.RegExp(fingerprintRegExp),
 			}),
-			// This is used in the case a custom device needs to be published.
+			// This is used in the case a device needs to be published.
 			Type.Object({
 				model: Model,
 			}),

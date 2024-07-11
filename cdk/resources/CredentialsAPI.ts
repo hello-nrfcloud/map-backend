@@ -9,7 +9,7 @@ import type { BackendLambdas } from '../packBackendLambdas.js'
 import { STACK_NAME } from '../stackConfig.js'
 import type { PublicDevices } from './PublicDevices.js'
 
-export class CustomDevicesAPI extends Construct {
+export class CredentialsAPI extends Construct {
 	public readonly createCredentials: Lambda.IFunction
 
 	constructor(
@@ -29,7 +29,7 @@ export class CustomDevicesAPI extends Construct {
 			publicDevices: PublicDevices
 		},
 	) {
-		super(parent, 'customDevicesAPI')
+		super(parent, 'credentialsAPI')
 
 		const openSSLFn = new Lambda.Function(this, 'openSSLFn', {
 			handler: Lambda.Handler.FROM_IMAGE,
@@ -54,7 +54,7 @@ export class CustomDevicesAPI extends Construct {
 			'createCredentialsFn',
 			lambdaSources.createCredentials,
 			{
-				description: 'Allows users to create credentials for custom devices',
+				description: 'Allows users to create credentials for devices',
 				layers: [baseLayer],
 				environment: {
 					BACKEND_STACK_NAME: STACK_NAME,

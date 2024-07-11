@@ -16,7 +16,7 @@ import { NRF_CLOUD_ACCOUNT } from '../../settings/account.js'
 
 const modelIDs = Object.keys(models)
 
-export const registerCustomMapDevice = ({
+export const registerDeviceCommand = ({
 	ssm,
 	stackName,
 	db,
@@ -31,8 +31,23 @@ export const registerCustomMapDevice = ({
 	idIndex: string
 	env: Required<Environment>
 }): CommandDefinition => ({
-	command: 'register-custom-map-device <model> <email>',
-	action: async (model, email) => {
+	command: 'register-device <model> <email>',
+	options: [
+		{
+			flags: '-i, --deviceId <deviceId>',
+			description: `The device ID to use. If not provided, a random device ID will be generated.`,
+		},
+		{
+			flags: '-c, --cert <cert>',
+			description:
+				'The location of the certificate to use for the device. If not provided, a new certificate will be generated.',
+		},
+	],
+	action: async (
+		model,
+		email,
+		{ deviceId: maybeDeviceId, cert: maybeCertificate },
+	) => {
 		if (!modelIDs.includes(model))
 			throw new Error(
 				`Unknown model ${model}. Known models are ${modelIDs.join(', ')}.`,
@@ -40,7 +55,7 @@ export const registerCustomMapDevice = ({
 		if (!/.+@.+/.test(email)) {
 			throw new Error(`Must provide valid email.`)
 		}
-		const deviceId = `map-${randomUUID()}`
+		const deviceId = maybeDeviceId ?? `map-${randomUUID()}`
 		console.debug(chalk.yellow('Device ID:'), chalk.blue(deviceId))
 		const publicDevice = publicDevicesRepo({
 			db,
@@ -55,32 +70,13 @@ export const registerCustomMapDevice = ({
 		})
 		if ('error' in maybePublished) {
 			console.error(maybePublished.error)
-			throw new Error(`Failed to register custom device.`)
+			throw new Error(`Failed to register device.`)
 		}
 
-		const certDir = path.join(
-			process.cwd(),
-			'certificates',
-			`${env.account}@${env.region}`,
-			email,
-		)
-		try {
-			await fs.mkdir(certDir)
-		} catch {
-			// pass
-		}
-		const caCertificates = await createCA(certDir, 'Custom Device', email)
-		const deviceCertificates = await createDeviceCertificate({
-			dest: certDir,
-			caCertificates,
-			deviceId,
-		})
-
-		const [privateKey, certificate] = (await Promise.all(
-			[deviceCertificates.privateKey, deviceCertificates.signedCert].map(
-				async (f) => fs.readFile(f, 'utf-8'),
-			),
-		)) as [string, string]
+		const certificate =
+			maybeCertificate === undefined
+				? (await generateCert({ deviceId, env, email })).certificate
+				: await fs.readFile(maybeCertificate, 'utf-8')
 
 		const { apiKey, apiEndpoint } = await getAPISettings({
 			ssm,
@@ -96,8 +92,8 @@ export const registerCustomMapDevice = ({
 		const registration = await client.register([
 			{
 				deviceId,
-				subType: 'map-custom',
-				tags: ['map', 'map-custom'],
+				subType: 'map',
+				tags: ['map'],
 				certPem: certificate,
 			},
 		])
@@ -110,15 +106,51 @@ export const registerCustomMapDevice = ({
 			chalk.gray('BulkOps Request ID'),
 			chalk.gray(registration.bulkOpsRequestId),
 		)
-
-		const credJSON = path.join(certDir, `${deviceId}.json`)
-		await fs.writeFile(
-			credJSON,
-			JSON.stringify({ deviceId, privateKey, certificate }),
-			'utf-8',
-		)
-
-		console.log(chalk.green(`Credentials written to`), chalk.cyan(credJSON))
 	},
-	help: 'Registers a custom device to be shown on the map',
+	help: 'Registers a device to be shown on the map',
 })
+
+const generateCert = async ({
+	deviceId,
+	env,
+	email,
+}: {
+	email: string
+	deviceId: string
+	env: Environment
+}): Promise<{ certificate: string }> => {
+	const certDir = path.join(
+		process.cwd(),
+		'certificates',
+		`${env.account}@${env.region}`,
+		email,
+	)
+	try {
+		await fs.stat(certDir)
+	} catch {
+		await fs.mkdir(certDir, { recursive: true })
+	}
+	const caCertificates = await createCA(certDir, 'Device', email)
+	const deviceCertificates = await createDeviceCertificate({
+		dest: certDir,
+		caCertificates,
+		deviceId,
+	})
+
+	const [privateKey, certificate] = (await Promise.all(
+		[deviceCertificates.privateKey, deviceCertificates.signedCert].map(
+			async (f) => fs.readFile(f, 'utf-8'),
+		),
+	)) as [string, string]
+
+	const credJSON = path.join(certDir, `${deviceId}.json`)
+	await fs.writeFile(
+		credJSON,
+		JSON.stringify({ deviceId, privateKey, certificate }),
+		'utf-8',
+	)
+
+	console.log(chalk.green(`Credentials written to`), chalk.cyan(credJSON))
+
+	return { certificate }
+}

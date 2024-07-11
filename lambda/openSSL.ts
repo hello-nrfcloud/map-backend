@@ -25,7 +25,7 @@ export const handler = async (event: {
 	console.log(`Creating certificate for email ${email} and id ${id} ...`)
 
 	const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'certs-'))
-	const caCertificates = await createCA(tempDir, 'Custom Device', email)
+	const caCertificates = await createCA(tempDir, 'Device', email)
 	const deviceCertificates = await createDeviceCertificate({
 		dest: tempDir,
 		caCertificates,

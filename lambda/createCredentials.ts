@@ -63,7 +63,7 @@ const { track, metrics } = metricsForComponent(
 )
 
 /**
- * This registers a custom device, which allows arbitrary users to showcase their products on the map.
+ * This registers a device, which allows arbitrary users to showcase their products on the map.
  */
 const h = async (
 	event: APIGatewayProxyEventV2,
@@ -75,7 +75,7 @@ const h = async (
 	if (deviceId.startsWith('map-') === false)
 		return aProblem({
 			status: 400,
-			title: 'Credentials can only be created for custom devices.',
+			title: 'Credentials can only be created for devices.',
 		})
 
 	const maybePublicDevice = await repo.getByDeviceId(deviceId)
@@ -106,8 +106,8 @@ const h = async (
 	const registration = await client.register([
 		{
 			deviceId,
-			subType: 'map-custom',
-			tags: ['map', 'map-custom'],
+			subType: 'map',
+			tags: ['map'],
 			certPem: certificate,
 		},
 	])

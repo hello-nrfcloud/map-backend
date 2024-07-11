@@ -4,6 +4,7 @@ import {
 	GetItemCommand,
 	UpdateItemCommand,
 	QueryCommand,
+	DeleteItemCommand,
 } from '@aws-sdk/client-dynamodb'
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import { models } from '@hello.nrfcloud.com/proto-map/models'
@@ -94,6 +95,14 @@ export const publicDevicesRepo = ({
 				device: {
 					id: string
 				}
+		  }
+	>
+	remove: (id: string) => Promise<
+		| {
+				error: Error
+		  }
+		| {
+				success: true
 		  }
 	>
 } => {
@@ -233,6 +242,23 @@ export const publicDevicesRepo = ({
 					device: {
 						id: Attributes?.['id']?.S as string,
 					},
+				}
+			} catch (err) {
+				return { error: err as Error }
+			}
+		},
+		remove: async (deviceId) => {
+			try {
+				await db.send(
+					new DeleteItemCommand({
+						TableName,
+						Key: marshall({
+							secret__deviceId: deviceId,
+						}),
+					}),
+				)
+				return {
+					success: true,
 				}
 			} catch (err) {
 				return { error: err as Error }

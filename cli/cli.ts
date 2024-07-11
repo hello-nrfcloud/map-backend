@@ -9,7 +9,7 @@ import type { StackOutputs } from '../cdk/BackendStack.js'
 import { STACK_NAME } from '../cdk/stackConfig.js'
 import psjon from '../package.json'
 import { ECRClient } from '@aws-sdk/client-ecr'
-import { registerCustomMapDevice } from './commands/register-custom-device.js'
+import { registerDeviceCommand } from './commands/register-device.js'
 import type { CommandDefinition } from './commands/CommandDefinition.js'
 import { buildContainersCommand } from './commands/build-container.js'
 import { env } from '../aws/env.js'
@@ -19,6 +19,7 @@ import { CloudWatchLogsClient } from '@aws-sdk/client-cloudwatch-logs'
 import { configureHello } from './commands/configure-hello.js'
 import { shareDevice } from './commands/share-device.js'
 import { listDevicesCommand } from './commands/listDevices.js'
+import { removeDeviceCommand } from './commands/remove-device.js'
 
 const ssm = new SSMClient({})
 const db = new DynamoDBClient({})
@@ -67,12 +68,19 @@ const CLI = async ({ isCI }: { isCI: boolean }) => {
 		try {
 			const backendOutputs = await stackOutput(cf)<StackOutputs>(STACK_NAME)
 			commands.push(
-				registerCustomMapDevice({
+				registerDeviceCommand({
 					db,
 					publicDevicesTableName: backendOutputs.publicDevicesTableName,
 					idIndex: backendOutputs.publicDevicesTableIdIndexName,
 					ssm,
 					env: accountEnv,
+					stackName: STACK_NAME,
+				}),
+				removeDeviceCommand({
+					db,
+					publicDevicesTableName: backendOutputs.publicDevicesTableName,
+					idIndex: backendOutputs.publicDevicesTableIdIndexName,
+					ssm,
 					stackName: STACK_NAME,
 				}),
 				shareDevice({
