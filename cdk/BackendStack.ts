@@ -17,9 +17,11 @@ import { ContainerRepositoryId } from '../aws/ecr.js'
 import { repositoryName } from '@bifravst/aws-cdk-ecr-helpers/repository'
 import { ContinuousDeployment } from '@bifravst/ci'
 import { API } from './resources/api/API.js'
-import type { DomainCert } from '../aws/acm.js'
 import { ApiHealthCheck } from './resources/api/HealthCheck.js'
-import { CustomDomain } from './resources/api/CustomDomain.js'
+import {
+	CustomDomain,
+	type CustomDomainDetails,
+} from './resources/api/CustomDomain.js'
 
 /**
  * Provides resources for the backend serving data to hello.nrfcloud.com/map
@@ -31,14 +33,16 @@ export class BackendStack extends Stack {
 			domain,
 			apiDomain,
 			layer,
+			cdkLayer,
 			lambdaSources,
 			openSSLLambdaContainerTag,
 			repository,
 			gitHubOICDProviderArn,
 		}: {
 			domain: string
-			apiDomain?: DomainCert
+			apiDomain?: CustomDomainDetails
 			layer: PackedLayer
+			cdkLayer: PackedLayer
 			lambdaSources: BackendLambdas
 			openSSLLambdaContainerTag: string
 			repository: {
@@ -86,15 +90,20 @@ export class BackendStack extends Stack {
 				value: api.URL,
 			})
 		} else {
+			const cdkLayerVersion = new Lambda.LayerVersion(this, 'cdkLayer', {
+				code: new LambdaSource(this, {
+					id: 'cdkLayer',
+					zipFile: cdkLayer.layerZipFile,
+					hash: cdkLayer.hash,
+				}).code,
+				compatibleArchitectures: [Lambda.Architecture.ARM_64],
+				compatibleRuntimes: [Lambda.Runtime.NODEJS_20_X],
+			})
 			const domain = new CustomDomain(this, {
 				api,
 				apiDomain,
-			})
-			new CfnOutput(this, 'gatewayDomainName', {
-				exportName: `${this.stackName}:gatewayDomainName`,
-				description:
-					'The domain name associated with the regional endpoint for the custom domain name. Use this as the target for the CNAME record for your custom domain name.',
-				value: domain.gatewayDomainName.toString(),
+				cdkLayerVersion,
+				lambdaSources,
 			})
 			new CfnOutput(this, 'APIURL', {
 				exportName: `${this.stackName}:APIURL`,

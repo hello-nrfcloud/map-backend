@@ -2,14 +2,9 @@ import type { ACMClient } from '@aws-sdk/client-acm'
 import { CertificateStatus, ListCertificatesCommand } from '@aws-sdk/client-acm'
 import chalk from 'chalk'
 
-export type DomainCert = {
-	domain: string
-	certificateArn: string
-}
-
-const getDomainCertificate =
+const getDomainCertificateArn =
 	(acm: ACMClient) =>
-	async (domain: string): Promise<DomainCert> => {
+	async (domain: string): Promise<{ certificateArn: string }> => {
 		const { CertificateSummaryList } = await acm.send(
 			new ListCertificatesCommand({
 				CertificateStatuses: [CertificateStatus.ISSUED],
@@ -21,16 +16,15 @@ const getDomainCertificate =
 		if (cert === undefined)
 			throw new Error(`Failed to find certificate for ${domain}!`)
 		return {
-			domain,
 			certificateArn: cert.CertificateArn as string,
 		}
 	}
 
-export const getCertificateForDomain =
+export const getCertificateArnForDomain =
 	(acm: ACMClient) =>
-	async (domainName: string): Promise<DomainCert> => {
+	async (domainName: string): Promise<{ certificateArn: string }> => {
 		try {
-			return await getDomainCertificate(acm)(domainName)
+			return await getDomainCertificateArn(acm)(domainName)
 		} catch (err) {
 			console.error(
 				chalk.red(

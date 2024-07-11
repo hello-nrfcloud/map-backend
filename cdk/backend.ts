@@ -6,7 +6,8 @@ import { pack as packBaseLayer } from './baseLayer.js'
 import { ensureGitHubOIDCProvider } from '@bifravst/ci'
 import { packBackendLambdas } from './packBackendLambdas.js'
 import { ACMClient } from '@aws-sdk/client-acm'
-import { getCertificateForDomain } from '../aws/acm.js'
+import { getCertificateArnForDomain } from '../aws/acm.js'
+import { pack as packCDKLayer } from './cdkLayer.js'
 
 const repoUrl = new URL(pJSON.repository.url)
 const repository = {
@@ -24,10 +25,12 @@ const { openSSLLambdaContainerTag } = fromEnv({
 
 const isTest = process.env.IS_TEST === '1'
 const apiDomainName = process.env.API_DOMAIN_NAME
+const apiDomainRoute53RoleArn = process.env.API_DOMAIN_ROUTE_53_ROLE_ARN
 
 new BackendApp({
 	lambdaSources: await packBackendLambdas(),
 	layer: await packBaseLayer(),
+	cdkLayer: await packCDKLayer(),
 	repository,
 	gitHubOICDProviderArn: await ensureGitHubOIDCProvider({
 		iam,
@@ -36,8 +39,14 @@ new BackendApp({
 	openSSLLambdaContainerTag,
 	domain: 'hello.nrfcloud.com',
 	apiDomain:
-		apiDomainName !== undefined
-			? await getCertificateForDomain(acm)(apiDomainName)
+		apiDomainName !== undefined && apiDomainRoute53RoleArn !== undefined
+			? {
+					domainName: apiDomainName,
+					certificateArn:
+						(await getCertificateArnForDomain(acm)(apiDomainName))
+							.certificateArn ?? '',
+					roleArn: apiDomainRoute53RoleArn,
+				}
 			: undefined,
 	version: (() => {
 		const v = process.env.VERSION

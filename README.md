@@ -65,9 +65,48 @@ variable `API_DOMAIN_NAME`.
 If you do so, make sure to create a certificate in the region for this domain
 name.
 
-After deploying the stack, make sure to set up a CNAME record for this domain
-that points to the hostname of the deployed API (available in the stack output
-`gatewayDomainName`).
+Create a role in the account that manages the domain name, to allow the the
+production account to update the CNAME for the API domain with these permissions
+(make sure to replace `<Hosted Zone ID>`, `<api domain name>`):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "route53:ChangeResourceRecordSets",
+      "Resource": "arn:aws:route53:::hostedzone/<Hosted Zone ID>",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+            "<api domain name>"
+          ],
+          "route53:ChangeResourceRecordSetsRecordTypes": ["CNAME"],
+          "route53:ChangeResourceRecordSetsActions": ["UPSERT"]
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "route53:ListHostedZonesByName",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+Then, for continuous deployment:
+
+- create the variable `API_DOMAIN_NAME` with the name of the api domain, e.g.
+  `api.nordicsemi.world`
+- create the secret `API_DOMAIN_ROUTE_53_ROLE_ARN` with the role ARN of the role
+  that allows the production account to update the CNAME for the API domain.
+
+```bash
+gh variable set API_DOMAIN_NAME --env production --body api.sim-details.nordicsemi.cloud
+gh variable set API_DOMAIN_ROUTE_53_ROLE_ARN --env production --body arn:aws:iam::<account ID>:role/<role name>
+```
 
 ## Continuous Deployment using GitHub Actions
 
