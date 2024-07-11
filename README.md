@@ -104,8 +104,8 @@ Then, for continuous deployment:
   that allows the production account to update the CNAME for the API domain.
 
 ```bash
-gh variable set API_DOMAIN_NAME --env production --body api.sim-details.nordicsemi.cloud
-gh variable set API_DOMAIN_ROUTE_53_ROLE_ARN --env production --body arn:aws:iam::<account ID>:role/<role name>
+gh variable set API_DOMAIN_NAME --env production --body api.nordicsemi.world
+gh secret set API_DOMAIN_ROUTE_53_ROLE_ARN --env production --body arn:aws:iam::<account ID>:role/<role name>
 ```
 
 ## Continuous Deployment using GitHub Actions
