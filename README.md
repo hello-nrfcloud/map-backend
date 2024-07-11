@@ -46,7 +46,7 @@ and published before deploying the solutions.
 export OPENSSL_LAMBDA_CONTAINER_TAG=$(./cli.sh build-container openssl-lambda)
 
 # You can add these outputs to your .env file
-echo "export OPENSSL_LAMBDA_CONTAINER_TAG=$OPENSSL_LAMBDA_CONTAINER_TAG"
+echo "export OPENSSL_LAMBDA_CONTAINER_TAG=$OPENSSL_LAMBDA_CONTAINER_TAG" >> .envrc
 direnv allow
 ```
 

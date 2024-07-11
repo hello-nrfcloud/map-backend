@@ -34,7 +34,7 @@ export class PublicDevices extends Construct {
 				type: DynamoDB.AttributeType.STRING,
 			},
 			projectionType: DynamoDB.ProjectionType.INCLUDE,
-			nonKeyAttributes: ['id'],
+			nonKeyAttributes: ['id', 'secret__deviceId'],
 		})
 
 		this.publicDevicesTable.addGlobalSecondaryIndex({

@@ -29,6 +29,7 @@ import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { shadowToObjects } from '@hello.nrfcloud.com/proto-map/lwm2m/aws'
+import type { LwM2MObjectInstance } from '@hello.nrfcloud.com/proto-map/lwm2m'
 
 const {
 	publicDevicesTableName,
@@ -57,7 +58,7 @@ const h = async (
 ): Promise<APIGatewayProxyResultV2> => {
 	console.log(JSON.stringify({ event }))
 
-	const devicesToFetch: { id: string; model: string }[] = []
+	const devicesToFetch: { id: string; deviceId: string; model: string }[] = []
 	const minConfirmTime = Date.now() - consentDurationMS
 
 	const qs: Record<string, any> = event.queryStringParameters ?? {}
@@ -80,6 +81,7 @@ const h = async (
 				'#model = :model AND #ownerConfirmed > :minConfirmTime',
 			ExpressionAttributeNames: {
 				'#id': 'id',
+				'#deviceId': 'secret__deviceId',
 				'#model': 'model',
 				'#ownerConfirmed': 'ownerConfirmed',
 			},
@@ -89,7 +91,7 @@ const h = async (
 					S: new Date(minConfirmTime).toISOString(),
 				},
 			},
-			ProjectionExpression: '#id',
+			ProjectionExpression: '#id, #deviceId',
 		}
 
 		if (maybeValidQuery.value.ids !== undefined) {
@@ -105,22 +107,34 @@ const h = async (
 		console.log(JSON.stringify({ queryInput }))
 
 		const { Items } = await db.send(new QueryCommand(queryInput))
+
 		devicesToFetch.push(
 			...(Items ?? [])
-				.map((item) => unmarshall(item) as { id: string })
-				.map(({ id }) => ({ id, model })),
+				.map(
+					(item) =>
+						unmarshall(item) as { id: string; secret__deviceId: string },
+				)
+				.map(({ id, secret__deviceId }) => ({
+					id,
+					deviceId: secret__deviceId,
+					model,
+				})),
 		)
 	}
 
 	console.log(JSON.stringify({ devicesToFetch }))
 
-	const devices = (
+	const devices: Array<{
+		id: string
+		model: string
+		state?: Array<LwM2MObjectInstance>
+	}> = (
 		await Promise.all(
-			devicesToFetch.map(async ({ id: id, model }) => {
+			devicesToFetch.map(async ({ id, deviceId, model }) => {
 				try {
 					const shadow = await iotData.send(
 						new GetThingShadowCommand({
-							thingName: id,
+							thingName: deviceId,
 							shadowName: 'lwm2m',
 						}),
 					)
@@ -136,7 +150,7 @@ const h = async (
 					}
 				} catch (err) {
 					if (err instanceof ResourceNotFoundException) {
-						console.debug(`[${id}]: no shadow found.`)
+						console.debug(`[${id}]: no shadow found for ${deviceId}.`)
 					} else {
 						console.error(err)
 					}
@@ -163,5 +177,5 @@ const h = async (
 
 export const handler = middy()
 	.use(addVersionHeader(version))
-	.use(corsOPTIONS('POST'))
+	.use(corsOPTIONS('GET'))
 	.handler(h)
