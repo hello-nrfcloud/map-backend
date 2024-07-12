@@ -41,7 +41,7 @@
     "@bifravst/prettier-config": "1.0.3",
     "@bifravst/run": "1.2.0",
     "@commitlint/config-conventional": "19.2.2",
-    "@hello.nrfcloud.com/bdd-markdown-steps": "2.5.53",
+    "@hello.nrfcloud.com/bdd-markdown-steps": "2.5.54",
     "@nordicsemiconductor/bdd-markdown": "8.2.3",
     "@nordicsemiconductor/cloudformation-helpers": "9.1.0",
     "@swc/cli": "0.4.0",
