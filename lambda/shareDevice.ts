@@ -8,7 +8,7 @@ import {
 	validateWithTypeBox,
 } from '@hello.nrfcloud.com/proto'
 import { Context, Model } from '@hello.nrfcloud.com/proto-map/api'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import { Type } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,

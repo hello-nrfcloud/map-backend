@@ -1,7 +1,7 @@
 import { getAPISettings } from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { STACK_NAME } from '../cdk/stackConfig.js'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda'
 import type {
 	APIGatewayProxyEventV2,

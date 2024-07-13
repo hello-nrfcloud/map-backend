@@ -5,14 +5,14 @@ import {
 import type pJson from '../package.json'
 
 const dependencies: Array<keyof (typeof pJson)['dependencies']> = [
-	'@nordicsemiconductor/from-env',
+	'@bifravst/from-env',
 	'@sinclair/typebox',
 	'@hello.nrfcloud.com/proto-map',
 	'@hello.nrfcloud.com/proto',
 	'@middy/core',
 	'lodash-es',
-	'@nordicsemiconductor/random-words',
-	'@nordicsemiconductor/timestream-helpers',
+	'@bifravst/random-words',
+	'@bifravst/timestream-helpers',
 	'@aws-lambda-powertools/metrics',
 	'@hello.nrfcloud.com/nrfcloud-api-helpers',
 	'@hello.nrfcloud.com/lambda-helpers',

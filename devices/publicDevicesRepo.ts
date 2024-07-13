@@ -10,7 +10,7 @@ import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import { models } from '@hello.nrfcloud.com/proto-map/models'
 import { consentDurationMS, consentDurationSeconds } from './consentDuration.js'
 import { generateCode } from '@hello.nrfcloud.com/proto/fingerprint'
-import { randomWords } from '@nordicsemiconductor/random-words'
+import { randomWords } from '@bifravst/random-words'
 
 export type PublicDeviceRecord = {
 	/**

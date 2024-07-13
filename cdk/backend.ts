@@ -1,5 +1,5 @@
 import { IAMClient } from '@aws-sdk/client-iam'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import pJSON from '../package.json'
 import { BackendApp } from './BackendApp.js'
 import { pack as packBaseLayer } from './baseLayer.js'
