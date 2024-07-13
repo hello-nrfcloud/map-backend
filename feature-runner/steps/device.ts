@@ -7,7 +7,7 @@ import {
 	codeBlockOrThrow,
 	regExpMatchedStep,
 	type StepRunner,
-} from '@nordicsemiconductor/bdd-markdown'
+} from '@bifravst/bdd-markdown'
 import { Type } from '@sinclair/typebox'
 import { fingerprintGenerator } from '@hello.nrfcloud.com/proto/fingerprint'
 import { IMEI, email } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
