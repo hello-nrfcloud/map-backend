@@ -34,7 +34,7 @@
     "@aws-sdk/client-route-53": "3.614.0",
     "@bifravst/aws-cdk-ecr-helpers": "1.2.25",
     "@bifravst/aws-cdk-lambda-helpers": "1.8.37",
-    "@bifravst/aws-ssm-settings-helpers": "1.1.44",
+    "@bifravst/aws-ssm-settings-helpers": "1.1.45",
     "@bifravst/ci": "2.0.1",
     "@bifravst/eslint-config-typescript": "6.1.9",
     "@bifravst/http-api-mock": "2.0.40",
