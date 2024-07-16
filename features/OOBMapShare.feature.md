@@ -34,6 +34,7 @@ When I `POST` to `${API}/share` with
 ```json
 {
   "fingerprint": "${fingerprint}",
+  "model": "thingy91x",
   "email": "${email}"
 }
 ```

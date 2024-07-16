@@ -74,6 +74,7 @@ const validateInput = validateWithTypeBox(
 			// Out of box devices can be published using their fingerprint
 			Type.Object({
 				fingerprint: Type.RegExp(fingerprintRegExp),
+				model: Model,
 			}),
 			// This is used in the case a device needs to be published.
 			Type.Object({
@@ -113,10 +114,10 @@ const h = async (
 		if ('error' in maybeDevice) {
 			return aProblem(maybeDevice.error)
 		}
-		const { id: deviceId, model } = maybeDevice.result
+		const { id: deviceId } = maybeDevice.result
 		return publish({
 			deviceId,
-			model,
+			model: maybeValidInput.value.model,
 			email,
 		})
 	} else {
