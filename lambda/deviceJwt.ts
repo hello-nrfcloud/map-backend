@@ -83,6 +83,7 @@ const h = async (
 					algorithm: 'ES512',
 					expiresIn: '1h',
 					audience: 'hello.nrfcloud.com',
+					keyid: jwtSettings.keyId,
 				},
 			),
 		},

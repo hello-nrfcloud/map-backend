@@ -7,7 +7,13 @@ import { Type } from '@sinclair/typebox'
 import jwt from 'jsonwebtoken'
 import { check, closeTo, objectMatching } from 'tsmatchers'
 
-const jwtVerify = (publicKey: string) =>
+const jwtVerify = ({
+	publicKey,
+	keyId,
+}: {
+	keyId: string
+	publicKey: string
+}) =>
 	regExpMatchedStep(
 		{
 			regExp:
@@ -35,6 +41,7 @@ const jwtVerify = (publicKey: string) =>
 				objectMatching({
 					...expected,
 					aud: audience,
+					kid: keyId,
 					iat: closeTo(Date.now() / 1000, 10),
 					exp: closeTo(Date.now() / 1000 + 60 * 60, 10),
 				}),
@@ -44,6 +51,8 @@ const jwtVerify = (publicKey: string) =>
 
 export const steps = ({
 	publicKey,
+	keyId,
 }: {
 	publicKey: string
-}): Array<StepRunner<Record<string, any>>> => [jwtVerify(publicKey)]
+	keyId: string
+}): Array<StepRunner<Record<string, any>>> => [jwtVerify({ publicKey, keyId })]

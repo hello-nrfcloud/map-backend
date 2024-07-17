@@ -104,7 +104,9 @@ runner
 			idIndex: backendConfig.publicDevicesTableIdIndexName,
 		}),
 	)
-	.addStepRunners(...jwtSteps({ publicKey: jwtSettings.publicKey }))
+	.addStepRunners(
+		...jwtSteps({ publicKey: jwtSettings.publicKey, keyId: jwtSettings.keyId }),
+	)
 
 const res = await runner.run({
 	API: slashless(new URL(backendConfig.APIURL)),
