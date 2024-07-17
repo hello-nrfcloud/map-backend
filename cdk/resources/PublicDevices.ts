@@ -12,6 +12,8 @@ export class PublicDevices extends Construct {
 	constructor(parent: Construct) {
 		super(parent, 'public-devices')
 
+		const isTest = this.node.getContext('isTest') === true
+
 		// This table records the user consent for a certain device to be public
 		this.publicDevicesTable = new DynamoDB.Table(this, 'table', {
 			billingMode: DynamoDB.BillingMode.PAY_PER_REQUEST,
@@ -20,7 +22,8 @@ export class PublicDevices extends Construct {
 				type: DynamoDB.AttributeType.STRING,
 			},
 			timeToLiveAttribute: 'ttl',
-			removalPolicy: RemovalPolicy.DESTROY,
+			removalPolicy: isTest ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
+			pointInTimeRecovery: !isTest,
 		})
 
 		this.publicDevicesTable.addGlobalSecondaryIndex({
