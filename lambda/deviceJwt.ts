@@ -16,7 +16,7 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import jwt from 'jsonwebtoken'
+import { deviceJWT } from '../jwt/deviceJWT.js'
 import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
 import { getSettings } from '../settings/jwt.js'
 
@@ -59,8 +59,6 @@ const h = async (
 
 	const maybeSharedDevice = await devicesRepo.getById(id)
 
-	console.log(JSON.stringify(maybeSharedDevice))
-
 	if ('error' in maybeSharedDevice) {
 		return aProblem({
 			title: `Device with id ${maybeValidQuery.value.id} not shared: ${maybeSharedDevice.error}`,
@@ -75,20 +73,7 @@ const h = async (
 			id: maybeSharedDevice.device.id,
 			deviceId: maybeSharedDevice.device.deviceId,
 			model: maybeSharedDevice.device.model,
-			jwt: jwt.sign(
-				{
-					id: maybeSharedDevice.device.id,
-					deviceId: maybeSharedDevice.device.deviceId,
-					model: maybeSharedDevice.device.model,
-				},
-				jwtSettings.privateKey,
-				{
-					algorithm: 'ES512',
-					expiresIn: '1h',
-					audience: 'hello.nrfcloud.com',
-					keyid: jwtSettings.keyId,
-				},
-			),
+			jwt: deviceJWT(maybeSharedDevice.device, jwtSettings),
 		},
 		60 * 60 * 1000,
 	)

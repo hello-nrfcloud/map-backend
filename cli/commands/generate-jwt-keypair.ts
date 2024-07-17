@@ -7,10 +7,7 @@ import {
 	type Settings,
 } from '../../settings/jwt.js'
 import { STACK_NAME } from '../../cdk/stackConfig.js'
-import run from '@bifravst/run'
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import os from 'node:os'
+import { generateJWTKeyPair } from '../../jwt/generateJWTKeyPair.js'
 
 export const generateJWTKeypairCommand = ({
 	ssm,
@@ -41,30 +38,7 @@ export const generateJWTKeypairCommand = ({
 			return
 		}
 
-		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'jwt-'))
-		const privateKeyFile = path.join(tempDir, 'private.pem')
-		const publicKeyFile = path.join(tempDir, 'public.pem')
-
-		await run({
-			command: 'openssl',
-			args: [
-				'ecparam',
-				'-out',
-				privateKeyFile,
-				'-name',
-				'secp521r1',
-				'-genkey',
-			],
-		})
-
-		await run({
-			command: 'openssl',
-			args: ['ec', '-out', publicKeyFile, '-in', privateKeyFile, '-pubout'],
-		})
-
-		const privateKey = await fs.readFile(privateKeyFile, 'utf-8')
-		const publicKey = await fs.readFile(publicKeyFile, 'utf-8')
-		const keyId = crypto.randomUUID()
+		const { privateKey, publicKey, keyId } = await generateJWTKeyPair()
 
 		const put = putSetting({
 			ssm,

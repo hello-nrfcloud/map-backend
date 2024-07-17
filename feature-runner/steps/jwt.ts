@@ -32,18 +32,26 @@ const jwtVerify = ({
 			const expected = JSON.parse(codeBlockOrThrow(step).code)
 			const token = context[storageName]
 			progress(token)
-			const decoded = jwt.verify(token, publicKey, {
+			const decoded = jwt.decode(token, { complete: true })
+
+			jwt.verify(token, publicKey, {
 				audience,
 			}) as jwt.JwtPayload
 			progress(JSON.stringify(decoded, null, 2))
 
-			check(decoded).is(
+			check(decoded?.payload).is(
 				objectMatching({
 					...expected,
 					aud: audience,
-					kid: keyId,
 					iat: closeTo(Date.now() / 1000, 10),
 					exp: closeTo(Date.now() / 1000 + 60 * 60, 10),
+				}),
+			)
+
+			check(decoded?.header).is(
+				objectMatching({
+					alg: 'ES512',
+					kid: keyId,
 				}),
 			)
 		},
