@@ -18,7 +18,7 @@ import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
 import { helloApi } from '../hello/api.js'
-import { getSettings } from '../hello/settings.js'
+import { getSettings } from '../settings/hello.js'
 import { SSMClient } from '@aws-sdk/client-ssm'
 
 const { TableName, version, idIndex, stackName } = fromEnv({

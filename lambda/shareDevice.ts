@@ -27,7 +27,7 @@ import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
 import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
 import middy from '@middy/core'
-import { getSettings } from '../hello/settings.js'
+import { getSettings } from '../settings/hello.js'
 import { helloApi } from '../hello/api.js'
 import { Email } from '../util/validation/email.js'
 

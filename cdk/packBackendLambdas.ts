@@ -11,6 +11,8 @@ export type BackendLambdas = {
 	openSSL: PackedLambda
 	apiHealthCheck: PackedLambda
 	createCNAMERecord: PackedLambda
+	jwks: PackedLambda
+	deviceJwt: PackedLambda
 }
 
 const pack = async (id: string) => packLambdaFromPath(id, `lambda/${id}.ts`)
@@ -28,4 +30,6 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'createCNAMERecord',
 		'cdk/resources/api/createCNAMERecord.ts',
 	),
+	jwks: await pack('jwks'),
+	deviceJwt: await pack('deviceJwt'),
 })

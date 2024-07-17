@@ -8,6 +8,7 @@ import { packBackendLambdas } from './packBackendLambdas.js'
 import { ACMClient } from '@aws-sdk/client-acm'
 import { getCertificateArnForDomain } from '../aws/acm.js'
 import { pack as packCDKLayer } from './cdkLayer.js'
+import { pack as packJWTLayer } from './jwtLayer.js'
 
 const repoUrl = new URL(pJSON.repository.url)
 const repository = {
@@ -31,6 +32,7 @@ new BackendApp({
 	lambdaSources: await packBackendLambdas(),
 	layer: await packBaseLayer(),
 	cdkLayer: await packCDKLayer(),
+	jwtLayer: await packJWTLayer(),
 	repository,
 	gitHubOICDProviderArn: await ensureGitHubOIDCProvider({
 		iam,

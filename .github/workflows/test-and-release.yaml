@@ -207,6 +207,8 @@ jobs:
           ./cli.sh configure-nrfcloud-account apiKey apiKey_Nordic
           ./cli.sh configure-hello apiEndpoint ${{ env.HTTP_API_MOCK_API_URL }}hello-api/
 
+      - run: ./cli.sh generate-jwt-keypair
+
       - name: Deploy solution stack
         env:
           IS_TEST: 1

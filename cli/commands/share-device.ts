@@ -6,7 +6,7 @@ import type { CommandDefinition } from './CommandDefinition.js'
 
 const modelIDs = Object.keys(models)
 
-export const shareDevice = ({
+export const shareDeviceCommand = ({
 	db,
 	publicDevicesTableName,
 	idIndex,
