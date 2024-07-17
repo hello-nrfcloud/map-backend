@@ -72,6 +72,9 @@ const h = async (
 		200,
 		{
 			'@context': Context.named('jwt'),
+			id: maybeSharedDevice.device.id,
+			deviceId: maybeSharedDevice.device.deviceId,
+			model: maybeSharedDevice.device.model,
 			jwt: jwt.sign(
 				{
 					id: maybeSharedDevice.device.id,
