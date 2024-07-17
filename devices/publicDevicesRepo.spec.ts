@@ -21,7 +21,7 @@ void describe('publicDevicesRepo()', () => {
 				Promise.resolve({
 					Item: marshall({
 						id,
-						secret__deviceId: 'some-device',
+						deviceId: 'some-device',
 						model: 'thingy91x',
 						ownerConfirmed: ownerConfirmed.toISOString(),
 					}),
@@ -39,7 +39,7 @@ void describe('publicDevicesRepo()', () => {
 					device: {
 						id,
 						model: 'thingy91x',
-						secret__deviceId: 'some-device',
+						deviceId: 'some-device',
 						ownerConfirmed: ownerConfirmed.toISOString(),
 					},
 				},
@@ -47,7 +47,7 @@ void describe('publicDevicesRepo()', () => {
 			assertCall(send, {
 				input: {
 					TableName: 'some-table',
-					Key: { secret__deviceId: { S: 'some-device' } },
+					Key: { deviceId: { S: 'some-device' } },
 				},
 			})
 		})
@@ -91,7 +91,7 @@ void describe('publicDevicesRepo()', () => {
 				input: {
 					TableName: 'some-table',
 					Item: marshall({
-						secret__deviceId: 'some-device',
+						deviceId: 'some-device',
 						id,
 						ttl: Math.round(now.getTime() / 1000) + consentDurationSeconds,
 						ownerEmail: 'alex@example.com',
@@ -143,7 +143,7 @@ void describe('publicDevicesRepo()', () => {
 				input: {
 					TableName: 'some-table',
 					Key: {
-						secret__deviceId: { S: id },
+						deviceId: { S: id },
 					},
 					UpdateExpression: 'SET #ownerConfirmed = :now',
 					ExpressionAttributeNames: {
@@ -172,7 +172,7 @@ void describe('getById()', () => {
 					Items: [
 						marshall({
 							id,
-							secret__deviceId: 'some-device',
+							deviceId: 'some-device',
 						}),
 					],
 				}),
@@ -183,7 +183,7 @@ void describe('getById()', () => {
 				Promise.resolve({
 					Item: marshall({
 						id,
-						secret__deviceId: 'some-device',
+						deviceId: 'some-device',
 						model: 'thingy91x',
 						ownerConfirmed: new Date().toISOString(),
 					}),
@@ -205,7 +205,7 @@ void describe('getById()', () => {
 				KeyConditionExpression: '#id = :id',
 				ExpressionAttributeNames: {
 					'#id': 'id',
-					'#deviceId': 'secret__deviceId',
+					'#deviceId': 'deviceId',
 				},
 				ExpressionAttributeValues: {
 					':id': {
@@ -221,7 +221,7 @@ void describe('getById()', () => {
 			{
 				input: {
 					TableName: 'some-table',
-					Key: { secret__deviceId: { S: 'some-device' } },
+					Key: { deviceId: { S: 'some-device' } },
 				},
 			},
 			1,
@@ -239,7 +239,7 @@ void describe('toPublic()', () => {
 		const id = randomUUID()
 		const record = toPublic({
 			id,
-			secret__deviceId: 'some-device',
+			deviceId: 'some-device',
 			model: ModelID.Thingy91x,
 			ownerConfirmed: new Date(),
 			ownerEmail: 'alex@example.com',

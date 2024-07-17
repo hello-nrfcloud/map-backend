@@ -35,7 +35,7 @@ export const listDevicesCommand = ({
 				['Device ID', 'Public ID', 'Model', 'Owner Email', 'Confirmed until'],
 				...(Items ?? [])
 					.map((i) => unmarshall(i))
-					.map(({ secret__deviceId: deviceId, id, model, ownerEmail, ttl }) => [
+					.map(({ deviceId, id, model, ownerEmail, ttl }) => [
 						chalk.green(deviceId),
 						chalk.blue(id),
 						model,

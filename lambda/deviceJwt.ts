@@ -75,7 +75,7 @@ const h = async (
 			jwt: jwt.sign(
 				{
 					id: maybeSharedDevice.device.id,
-					deviceId: maybeSharedDevice.device.secret__deviceId,
+					deviceId: maybeSharedDevice.device.deviceId,
 					model: maybeSharedDevice.device.model,
 				},
 				jwtSettings.privateKey,
