@@ -81,7 +81,7 @@ const h = async (
 				'#model = :model AND #ownerConfirmed > :minConfirmTime',
 			ExpressionAttributeNames: {
 				'#id': 'id',
-				'#deviceId': 'secret__deviceId',
+				'#deviceId': 'deviceId',
 				'#model': 'model',
 				'#ownerConfirmed': 'ownerConfirmed',
 			},
@@ -110,13 +110,10 @@ const h = async (
 
 		devicesToFetch.push(
 			...(Items ?? [])
-				.map(
-					(item) =>
-						unmarshall(item) as { id: string; secret__deviceId: string },
-				)
-				.map(({ id, secret__deviceId }) => ({
+				.map((item) => unmarshall(item) as { id: string; deviceId: string })
+				.map(({ id, deviceId }) => ({
 					id,
-					deviceId: secret__deviceId,
+					deviceId,
 					model,
 				})),
 		)

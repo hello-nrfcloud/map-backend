@@ -25,7 +25,7 @@ export type PublicDeviceRecord = {
 	 *
 	 * @example "oob-352656108602296"
 	 */
-	secret__deviceId: string
+	deviceId: string
 	model: keyof typeof models
 	ownerEmail: string
 	ownershipConfirmationToken: string
@@ -113,7 +113,7 @@ export const publicDevicesRepo = ({
 			new GetItemCommand({
 				TableName,
 				Key: marshall({
-					secret__deviceId: deviceId.toLowerCase(),
+					deviceId: deviceId.toLowerCase(),
 				}),
 			}),
 		)
@@ -140,7 +140,7 @@ export const publicDevicesRepo = ({
 					KeyConditionExpression: '#id = :id',
 					ExpressionAttributeNames: {
 						'#id': 'id',
-						'#deviceId': 'secret__deviceId',
+						'#deviceId': 'deviceId',
 					},
 					ExpressionAttributeValues: {
 						':id': {
@@ -152,7 +152,7 @@ export const publicDevicesRepo = ({
 			)
 			const device = (Items ?? [])[0]
 			if (device === undefined) return { error: 'not_found' }
-			return await getByDeviceId(unmarshall(device).secret__deviceId)
+			return await getByDeviceId(unmarshall(device).deviceId)
 		},
 		share: async ({ deviceId, model, email, generateToken, confirmed }) => {
 			const id = randomWords({ numWords: 3 }).join('-')
@@ -175,7 +175,7 @@ export const publicDevicesRepo = ({
 						TableName,
 						Item: marshall(
 							{
-								secret__deviceId: deviceId.toLowerCase(),
+								deviceId: deviceId.toLowerCase(),
 								id,
 								ttl:
 									Math.round((now ?? new Date()).getTime() / 1000) +
@@ -197,7 +197,7 @@ export const publicDevicesRepo = ({
 								removeUndefinedValues: true,
 							},
 						),
-						ConditionExpression: 'attribute_not_exists(secret__deviceId)',
+						ConditionExpression: 'attribute_not_exists(deviceId)',
 					}),
 				)
 			} catch (err) {
@@ -219,7 +219,7 @@ export const publicDevicesRepo = ({
 					new UpdateItemCommand({
 						TableName,
 						Key: marshall({
-							secret__deviceId: deviceId,
+							deviceId,
 						}),
 						UpdateExpression: 'SET #ownerConfirmed = :now',
 						ExpressionAttributeNames: {
@@ -253,7 +253,7 @@ export const publicDevicesRepo = ({
 					new DeleteItemCommand({
 						TableName,
 						Key: marshall({
-							secret__deviceId: deviceId,
+							deviceId,
 						}),
 					}),
 				)

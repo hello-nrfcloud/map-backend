@@ -16,7 +16,7 @@ export class PublicDevices extends Construct {
 		this.publicDevicesTable = new DynamoDB.Table(this, 'table', {
 			billingMode: DynamoDB.BillingMode.PAY_PER_REQUEST,
 			partitionKey: {
-				name: 'secret__deviceId',
+				name: 'deviceId',
 				type: DynamoDB.AttributeType.STRING,
 			},
 			timeToLiveAttribute: 'ttl',
@@ -34,7 +34,7 @@ export class PublicDevices extends Construct {
 				type: DynamoDB.AttributeType.STRING,
 			},
 			projectionType: DynamoDB.ProjectionType.INCLUDE,
-			nonKeyAttributes: ['id', 'secret__deviceId'],
+			nonKeyAttributes: ['id', 'deviceId'],
 		})
 
 		this.publicDevicesTable.addGlobalSecondaryIndex({
@@ -44,7 +44,7 @@ export class PublicDevices extends Construct {
 				type: DynamoDB.AttributeType.STRING,
 			},
 			sortKey: {
-				name: 'secret__deviceId',
+				name: 'deviceId',
 				type: DynamoDB.AttributeType.STRING,
 			},
 			projectionType: DynamoDB.ProjectionType.KEYS_ONLY,
