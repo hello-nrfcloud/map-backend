@@ -8,12 +8,15 @@ import { STACK_NAME } from '../cdk/stackConfig.js'
 import { steps as storageSteps } from '@hello.nrfcloud.com/bdd-markdown-steps/storage'
 import { steps as randomSteps } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
 import { steps as deviceSteps } from './steps/device.js'
+import { steps as jwtSteps } from './steps/jwt.js'
 import { steps as RESTSteps } from '@hello.nrfcloud.com/bdd-markdown-steps/REST'
 import { IoTDataPlaneClient } from '@aws-sdk/client-iot-data-plane'
 import { fromEnv } from '@bifravst/from-env'
 import { mock as httpApiMock } from '@bifravst/http-api-mock/mock'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { slashless } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
+import { SSMClient } from '@aws-sdk/client-ssm'
+import { getSettings } from '../settings/jwt.js'
 
 /**
  * This file configures the BDD Feature runner
@@ -24,6 +27,7 @@ import { slashless } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 
 const iotData = new IoTDataPlaneClient({})
 const db = new DynamoDBClient({})
+const ssm = new SSMClient({})
 
 const { mockApiEndpoint, responsesTableName } = fromEnv({
 	mockApiEndpoint: 'HTTP_API_MOCK_API_URL',
@@ -34,6 +38,8 @@ const { mockApiEndpoint, responsesTableName } = fromEnv({
 const backendConfig = await stackOutput(
 	new CloudFormationClient({}),
 )<BackendStackOutputs>(STACK_NAME)
+
+const jwtSettings = await getSettings({ ssm, stackName: STACK_NAME })
 
 const print = (arg: unknown) =>
 	typeof arg === 'object' ? JSON.stringify(arg) : arg
@@ -98,6 +104,7 @@ runner
 			idIndex: backendConfig.publicDevicesTableIdIndexName,
 		}),
 	)
+	.addStepRunners(...jwtSteps({ publicKey: jwtSettings.publicKey }))
 
 const res = await runner.run({
 	API: slashless(new URL(backendConfig.APIURL)),

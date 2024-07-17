@@ -37,6 +37,21 @@ Provide your nRF Cloud API key:
 ./cli.sh configure-nrfcloud-account apiKey <API key>
 ```
 
+#### Keypair for signing history request
+
+The history is persisted in the
+[`backend`](https://github.com/hello-nrfcloud/backend), and the frontend
+requests device history using the same API as the
+[web application](https://github.com/hello-nrfcloud/web), however since public
+devices don't have a fingerprint, a JWT is created for public devices by the map
+backend, which is then used by the backend to authenticate history requests for
+devices. The following command installs a JWT keypair, and the public key is
+published at <https://api.nordicsemi.world/.well-known/jwks.json>.
+
+```bash
+./cli.sh generate-jwt-keypair
+```
+
 ### Build the docker images
 
 Some of the feature are run from docker containers, ensure they have been built

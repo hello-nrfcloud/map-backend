@@ -9,7 +9,7 @@ import {
 } from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
 import { NRF_CLOUD_ACCOUNT } from '../../settings/account.js'
 
-export const configureNrfCloudAccount = ({
+export const configureNrfCloudAccountCommand = ({
 	ssm,
 }: {
 	ssm: SSMClient

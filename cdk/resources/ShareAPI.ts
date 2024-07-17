@@ -8,24 +8,28 @@ export class ShareAPI extends Construct {
 	public readonly shareFn: Lambda.IFunction
 	public readonly confirmOwnershipFn: Lambda.IFunction
 	public readonly sharingStatusFn: Lambda.IFunction
+	public readonly deviceJwtFn: Lambda.IFunction
 	public readonly sharingStatusFingerprintFn: Lambda.IFunction
 	constructor(
 		parent: Construct,
 		{
 			domain,
 			baseLayer,
+			jwtLayer,
 			lambdaSources,
 			publicDevices,
 		}: {
 			domain: string
 			publicDevices: PublicDevices
 			baseLayer: Lambda.ILayerVersion
+			jwtLayer: Lambda.ILayerVersion
 			lambdaSources: Pick<
 				BackendLambdas,
 				| 'shareDevice'
 				| 'confirmOwnership'
 				| 'sharingStatus'
 				| 'sharingStatusFingerprint'
+				| 'deviceJwt'
 			>
 		},
 	) {
@@ -111,5 +115,21 @@ export class ShareAPI extends Construct {
 		publicDevices.publicDevicesTable.grantReadData(
 			this.sharingStatusFingerprintFn,
 		)
+
+		this.deviceJwtFn = new PackedLambdaFn(
+			this,
+			'deviceJwtFn',
+			lambdaSources.deviceJwt,
+			{
+				description:
+					'Returns a JWT for the device, confirming that it is shared.',
+				layers: [baseLayer, jwtLayer],
+				environment: {
+					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+				},
+			},
+		).fn
+		publicDevices.publicDevicesTable.grantReadData(this.deviceJwtFn)
 	}
 }

@@ -6,9 +6,9 @@ import {
 	deleteSettings,
 	putSetting,
 	type Settings,
-} from '../../hello/settings.js'
+} from '../../settings/hello.js'
 
-export const configureHello = ({
+export const configureHelloCommand = ({
 	ssm,
 }: {
 	ssm: SSMClient

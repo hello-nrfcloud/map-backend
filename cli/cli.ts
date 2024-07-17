@@ -13,13 +13,14 @@ import { registerDeviceCommand } from './commands/register-device.js'
 import type { CommandDefinition } from './commands/CommandDefinition.js'
 import { buildContainersCommand } from './commands/build-container.js'
 import { env } from '../aws/env.js'
-import { configureNrfCloudAccount } from './commands/configure-nrfcloud-account.js'
+import { configureNrfCloudAccountCommand } from './commands/configure-nrfcloud-account.js'
 import { logsCommand } from './commands/logs.js'
 import { CloudWatchLogsClient } from '@aws-sdk/client-cloudwatch-logs'
-import { configureHello } from './commands/configure-hello.js'
-import { shareDevice } from './commands/share-device.js'
+import { configureHelloCommand } from './commands/configure-hello.js'
+import { shareDeviceCommand } from './commands/share-device.js'
 import { listDevicesCommand } from './commands/listDevices.js'
 import { removeDeviceCommand } from './commands/remove-device.js'
+import { generateJWTKeypairCommand } from './commands/generate-jwt-keypair.js'
 
 const ssm = new SSMClient({})
 const db = new DynamoDBClient({})
@@ -53,13 +54,14 @@ const CLI = async ({ isCI }: { isCI: boolean }) => {
 		buildContainersCommand({
 			ecr,
 		}),
-		configureHello({ ssm }),
-		configureNrfCloudAccount({ ssm }),
+		configureHelloCommand({ ssm }),
+		configureNrfCloudAccountCommand({ ssm }),
 		logsCommand({
 			stackName: STACK_NAME,
 			cf,
 			logs,
 		}),
+		generateJWTKeypairCommand({ ssm }),
 	]
 
 	if (isCI) {
@@ -83,7 +85,7 @@ const CLI = async ({ isCI }: { isCI: boolean }) => {
 					ssm,
 					stackName: STACK_NAME,
 				}),
-				shareDevice({
+				shareDeviceCommand({
 					db,
 					publicDevicesTableName: backendOutputs.publicDevicesTableName,
 					idIndex: backendOutputs.publicDevicesTableIdIndexName,

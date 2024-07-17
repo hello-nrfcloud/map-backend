@@ -1,12 +1,10 @@
 import type { SSMClient } from '@aws-sdk/client-ssm'
 import { remove, get, put } from '@bifravst/aws-ssm-settings-helpers'
+import { ScopeContexts } from './scope.js'
 
 export type Settings = {
 	apiEndpoint: URL
 }
-
-const SCOPE = 'hello'
-const CONTEXT = 'backend'
 
 export const getSettings = async ({
 	ssm,
@@ -19,7 +17,7 @@ export const getSettings = async ({
 		(
 			await get(ssm)<{
 				apiEndpoint: string
-			}>({ stackName, scope: SCOPE, context: CONTEXT })()
+			}>({ stackName, ...ScopeContexts.HELLO_BACKEND })()
 		).apiEndpoint,
 	),
 })
@@ -34,7 +32,7 @@ export const putSetting =
 		 */
 		deleteBeforeUpdate?: boolean,
 	): Promise<{ name: string }> =>
-		put(ssm)({ stackName, scope: SCOPE, context: CONTEXT })({
+		put(ssm)({ stackName, ...ScopeContexts.HELLO_BACKEND })({
 			property,
 			value: value.toString(),
 			deleteBeforeUpdate,
@@ -45,8 +43,7 @@ export const deleteSettings =
 	async (property: keyof Settings): Promise<{ name: string }> =>
 		remove(ssm)({
 			stackName,
-			scope: SCOPE,
-			context: CONTEXT,
+			...ScopeContexts.HELLO_BACKEND,
 		})({
 			property,
 		})

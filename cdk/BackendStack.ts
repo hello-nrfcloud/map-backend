@@ -22,6 +22,7 @@ import {
 	CustomDomain,
 	type CustomDomainDetails,
 } from './resources/api/CustomDomain.js'
+import { JWKS } from './resources/JWKS.js'
 
 /**
  * Provides resources for the backend serving data to hello.nrfcloud.com/map
@@ -34,6 +35,7 @@ export class BackendStack extends Stack {
 			apiDomain,
 			layer,
 			cdkLayer,
+			jwtLayer,
 			lambdaSources,
 			openSSLLambdaContainerTag,
 			repository,
@@ -43,6 +45,7 @@ export class BackendStack extends Stack {
 			apiDomain?: CustomDomainDetails
 			layer: PackedLayer
 			cdkLayer: PackedLayer
+			jwtLayer: PackedLayer
 			lambdaSources: BackendLambdas
 			openSSLLambdaContainerTag: string
 			repository: {
@@ -60,6 +63,17 @@ export class BackendStack extends Stack {
 				id: 'baseLayer',
 				zipFile: layer.layerZipFile,
 				hash: layer.hash,
+			}).code,
+			compatibleArchitectures: [Lambda.Architecture.ARM_64],
+			compatibleRuntimes: [Lambda.Runtime.NODEJS_20_X],
+		})
+
+		const jwtLayerVersion = new Lambda.LayerVersion(this, 'jwtLayer', {
+			layerVersionName: `${Stack.of(this).stackName}-jwtLayer`,
+			code: new LambdaSource(this, {
+				id: 'jwtLayer',
+				zipFile: jwtLayer.layerZipFile,
+				hash: jwtLayer.hash,
 			}).code,
 			compatibleArchitectures: [Lambda.Architecture.ARM_64],
 			compatibleRuntimes: [Lambda.Runtime.NODEJS_20_X],
@@ -115,6 +129,7 @@ export class BackendStack extends Stack {
 		const shareAPI = new ShareAPI(this, {
 			domain,
 			baseLayer,
+			jwtLayer: jwtLayerVersion,
 			lambdaSources,
 			publicDevices,
 		})
@@ -122,6 +137,7 @@ export class BackendStack extends Stack {
 		api.addRoute('POST /share/confirm', shareAPI.confirmOwnershipFn)
 		api.addRoute('GET /share/status', shareAPI.sharingStatusFingerprintFn)
 		api.addRoute('GET /device/{id}', shareAPI.sharingStatusFn)
+		api.addRoute('GET /device/{id}/jwt', shareAPI.deviceJwtFn)
 
 		const devicesAPI = new DevicesAPI(this, {
 			baseLayer,
@@ -148,6 +164,15 @@ export class BackendStack extends Stack {
 		})
 
 		api.addRoute('POST /credentials', credentialsAPI.createCredentials)
+
+		// JWKS
+
+		const jwks = new JWKS(this, {
+			baseLayer,
+			jwtLayer: jwtLayerVersion,
+			lambdaSources,
+		})
+		api.addRoute('GET /.well-known/jwks.json', jwks.jwksFn)
 
 		// CD
 
