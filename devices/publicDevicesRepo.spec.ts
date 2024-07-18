@@ -165,7 +165,7 @@ void describe('publicDevicesRepo()', () => {
 void describe('getById()', () => {
 	void it(`it should return a device by it's public ID`, async () => {
 		const id = randomUUID()
-		const send = mock.fn()
+		const send = mock.fn<any>()
 		send.mock.mockImplementationOnce(
 			async () =>
 				Promise.resolve({
