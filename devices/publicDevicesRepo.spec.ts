@@ -229,6 +229,7 @@ void describe('getById()', () => {
 
 		assert.deepEqual('device' in res && toPublic(res.device), {
 			id,
+			deviceId: 'some-device',
 			model: 'thingy91x',
 		})
 	})
@@ -249,11 +250,8 @@ void describe('toPublic()', () => {
 		})
 		assert.deepEqual(record, {
 			id,
+			deviceId: 'some-device',
 			model: ModelID.Thingy91x,
 		})
-		assert.equal(
-			Object.values(record as Record<string, any>).includes('some-device'),
-			false,
-		)
 	})
 })

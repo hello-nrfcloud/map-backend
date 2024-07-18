@@ -269,7 +269,8 @@ export const publicDevicesRepo = ({
 
 export const toPublic = (
 	device: PublicDeviceRecord,
-): Pick<PublicDeviceRecord, 'id' | 'model'> => ({
+): Pick<PublicDeviceRecord, 'id' | 'deviceId' | 'model'> => ({
 	id: device.id,
+	deviceId: device.deviceId,
 	model: device.model,
 })

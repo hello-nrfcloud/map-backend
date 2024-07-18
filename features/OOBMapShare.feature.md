@@ -75,13 +75,16 @@ And the last response should match
 ```json
 {
   "id": "${publicDeviceId}",
+  "deviceId": "${deviceId}",
   "model": "thingy91x"
 }
 ```
 
 ## The sharing status of a device can be checked using the fingerprint
 
-> Users should be able to determine whether a certain device is sharing data
+> Users should be able to determine whether a certain device is sharing data.
+>
+> This uses the fingerprint so it's not possible to just enumerate device IDs.
 
 When I `GET` to `${API}/share/status?fingerprint=${fingerprint}`
 
@@ -93,6 +96,7 @@ And the last response should match
 ```json
 {
   "id": "${publicDeviceId}",
+  "deviceId": "${deviceId}",
   "model": "thingy91x"
 }
 ```

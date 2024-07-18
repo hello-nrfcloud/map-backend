@@ -69,7 +69,7 @@ const h = async (
 	return aResponse(
 		200,
 		{
-			'@context': Context.named('jwt'),
+			'@context': Context.deviceJWT,
 			id: maybeSharedDevice.device.id,
 			deviceId: maybeSharedDevice.device.deviceId,
 			model: maybeSharedDevice.device.model,

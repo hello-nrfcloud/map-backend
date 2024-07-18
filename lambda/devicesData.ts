@@ -123,6 +123,7 @@ const h = async (
 
 	const devices: Array<{
 		id: string
+		deviceId: string
 		model: string
 		state?: Array<LwM2MObjectInstance>
 	}> = (
@@ -137,6 +138,7 @@ const h = async (
 					)
 					return {
 						id,
+						deviceId,
 						model,
 						state:
 							shadow.payload === undefined
@@ -151,7 +153,7 @@ const h = async (
 					} else {
 						console.error(err)
 					}
-					return { id, model }
+					return { id, deviceId, model }
 				}
 			}),
 		)
