@@ -21,7 +21,7 @@ public device id in `publicDeviceId`
 
 ## Retrieve the JWT
 
-When I `GET` to `${API}/device/${publicDeviceId}  `
+When I `GET` to `${API}/device/${publicDeviceId}/jwt`
 
 Then I should receive a `https://github.com/hello-nrfcloud/proto-map/device-jwt`
 response
