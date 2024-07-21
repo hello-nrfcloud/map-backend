@@ -108,7 +108,7 @@
     "@bifravst/random-words": "8.0.1",
     "@bifravst/timestream-helpers": "6.0.3",
     "@hello.nrfcloud.com/certificate-helpers": "1.0.0",
-    "@hello.nrfcloud.com/lambda-helpers": "1.3.13",
+    "@hello.nrfcloud.com/lambda-helpers": "1.3.14",
     "@hello.nrfcloud.com/nrfcloud-api-helpers": "5.3.5",
     "@hello.nrfcloud.com/proto": "14.2.2",
     "@hello.nrfcloud.com/proto-map": "14.1.0",
