@@ -75,7 +75,7 @@ const h = async (
 			model: maybeSharedDevice.device.model,
 			jwt: deviceJWT(maybeSharedDevice.device, jwtSettings),
 		},
-		60 * 60 * 1000,
+		60 * 50, // 50 Minutes
 	)
 }
 
