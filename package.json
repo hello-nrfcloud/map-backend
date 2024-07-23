@@ -33,7 +33,7 @@
     "@aws-sdk/client-iot-data-plane": "3.616.0",
     "@aws-sdk/client-route-53": "3.616.0",
     "@bifravst/aws-cdk-ecr-helpers": "1.2.26",
-    "@bifravst/aws-cdk-lambda-helpers": "1.9.2",
+    "@bifravst/aws-cdk-lambda-helpers": "1.9.3",
     "@bifravst/aws-ssm-settings-helpers": "1.1.46",
     "@bifravst/bdd-markdown": "8.2.3",
     "@bifravst/ci": "2.0.2",
