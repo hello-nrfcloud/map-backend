@@ -35,7 +35,7 @@
     "@bifravst/aws-cdk-ecr-helpers": "1.2.26",
     "@bifravst/aws-cdk-lambda-helpers": "1.9.7",
     "@bifravst/aws-ssm-settings-helpers": "1.2.1",
-    "@bifravst/bdd-markdown": "8.2.5",
+    "@bifravst/bdd-markdown": "8.2.6",
     "@bifravst/ci": "2.0.2",
     "@bifravst/cloudformation-helpers": "9.1.1",
     "@bifravst/eslint-config-typescript": "6.1.12",
