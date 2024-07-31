@@ -19,6 +19,11 @@ import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
 import { MetricUnit } from '@aws-lambda-powertools/metrics'
 import { NRF_CLOUD_ACCOUNT } from '../settings/account.js'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import {
+	Context,
+	type DeviceCredentials,
+} from '@hello.nrfcloud.com/proto-map/api'
+import type { Static } from '@sinclair/typebox'
 
 const {
 	backendStackName,
@@ -103,14 +108,15 @@ const h = async (
 		).Payload?.transformToString() ?? '',
 	)
 
-	const registration = await client.register([
-		{
-			deviceId,
-			subType: 'map',
-			tags: ['map'],
-			certPem: certificate,
-		},
-	])
+	const registrationArgs = {
+		deviceId,
+		subType: 'map-custom',
+		tags: ['map-custom'],
+		certPem: certificate,
+	}
+	console.debug(`Registering`, JSON.stringify(registrationArgs))
+
+	const registration = await client.register([registrationArgs])
 
 	if ('error' in registration) {
 		console.error(
@@ -129,16 +135,21 @@ const h = async (
 
 	track('credentialsCreated', MetricUnit.Count, 1)
 
+	const res: Static<typeof DeviceCredentials> = {
+		'@context': Context.deviceCredentials.toString(),
+		id: maybePublicDevice.device.id,
+		deviceId,
+		credentials: {
+			privateKey,
+			certificate,
+		},
+	}
+
 	return aResponse(
 		200,
 		{
-			'@context': new URL(
-				'https://github.com/hello-nrfcloud/proto-map/device-credentials',
-			),
-			credentials: {
-				privateKey,
-				certificate,
-			},
+			...res,
+			'@context': Context.deviceCredentials,
 		},
 		0,
 		{
