@@ -108,15 +108,15 @@ const h = async (
 		).Payload?.transformToString() ?? '',
 	)
 
-	const registrationArgs = {
+	const deviceDetails = {
 		deviceId,
 		subType: 'map-custom',
 		tags: ['map-custom'],
 		certPem: certificate,
 	}
-	console.debug(`Registering`, JSON.stringify(registrationArgs))
+	console.debug(`Registering`, JSON.stringify(deviceDetails))
 
-	const registration = await client.register([registrationArgs])
+	const registration = await client.register([deviceDetails])
 
 	if ('error' in registration) {
 		console.error(

@@ -4,6 +4,7 @@ import {
 	type ImageChecker,
 } from '@bifravst/aws-cdk-ecr-helpers/image'
 import { hashFolder } from '@bifravst/aws-cdk-ecr-helpers/hashFolder'
+import { hashFile } from '@bifravst/aws-cdk-ecr-helpers/hashFile'
 import fs from 'node:fs/promises'
 import run from '@bifravst/run'
 import os from 'node:os'
@@ -12,7 +13,10 @@ import { checkSumOfStrings } from '@bifravst/aws-cdk-lambda-helpers/util'
 import type { logFn } from '../../../cli/log.js'
 import { ContainerRepositoryId } from '../../../aws/ecr.js'
 import { fileURLToPath } from 'node:url'
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+import pJSON from '../../../package.json'
 
 export const buildOpenSSLLambdaImage = async (
 	builder: ImageBuilder,
@@ -27,7 +31,12 @@ export const buildOpenSSLLambdaImage = async (
 		'lambda/openSSL.ts',
 	)
 
-	const tag = checkSumOfStrings([await hashFolder(dockerFilePath), hash])
+	const tag = checkSumOfStrings([
+		await hashFolder(dockerFilePath),
+		hash,
+		await hashFile(path.join(__dirname, '..', '..', '..', 'package.json')),
+		await hashFile(__filename),
+	])
 
 	if (
 		await checker({
@@ -45,6 +54,17 @@ export const buildOpenSSLLambdaImage = async (
 		command: 'unzip',
 		args: ['-o', zipFile, '-d', path.join(distDir, 'lambda')],
 		log: { debug, stderr: debug, stdout: debug },
+	})
+
+	await run({
+		command: 'npm',
+		args: [
+			'i',
+			`@hello.nrfcloud.com/certificate-helpers@${pJSON.dependencies['@hello.nrfcloud.com/certificate-helpers']}`,
+			`@bifravst/run@${pJSON.devDependencies['@bifravst/run']}`,
+		],
+		log: { debug, stderr: debug, stdout: debug },
+		cwd: path.join(distDir, 'lambda'),
 	})
 
 	await builder({
