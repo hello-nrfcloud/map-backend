@@ -55,7 +55,9 @@ export class BackendStack extends Stack {
 			gitHubOICDProviderArn: string
 		},
 	) {
-		super(parent, STACK_NAME)
+		super(parent, STACK_NAME, {
+			description: 'Provides the hello.nrfcloud.com/map backend.',
+		})
 
 		const baseLayer = new Lambda.LayerVersion(this, 'baseLayer', {
 			layerVersionName: `${Stack.of(this).stackName}-baseLayer`,
