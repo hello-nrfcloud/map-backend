@@ -53,7 +53,7 @@ When I `POST` to `${API}/share/confirm` with
 ```json
 {
   "deviceId": "${deviceId}",
-  "token": "123456"
+  "token": "ABC123"
 }
 ```
 

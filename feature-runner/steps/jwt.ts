@@ -5,7 +5,7 @@ import {
 } from '@bifravst/bdd-markdown'
 import { Type } from '@sinclair/typebox'
 import jwt from 'jsonwebtoken'
-import { check, closeTo, objectMatching } from 'tsmatchers'
+import { check, closeTo, greaterThan, objectMatching } from 'tsmatchers'
 
 const jwtVerify = ({
 	publicKey,
@@ -44,7 +44,7 @@ const jwtVerify = ({
 					...expected,
 					aud: audience,
 					iat: closeTo(Date.now() / 1000, 10),
-					exp: closeTo(Date.now() / 1000 + 60 * 60, 10),
+					exp: greaterThan(Date.now() / 1000),
 				}),
 			)
 

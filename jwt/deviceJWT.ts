@@ -1,3 +1,4 @@
+import { Context } from '@hello.nrfcloud.com/proto-map/api'
 import type { PublicDeviceRecord } from '../devices/publicDevicesRepo.js'
 
 import jwt from 'jsonwebtoken'
@@ -14,6 +15,7 @@ export const deviceJWT = (
 ): string =>
 	jwt.sign(
 		{
+			'@context': Context.deviceJWT.toString(),
 			id: device.id,
 			deviceId: device.deviceId,
 			model: device.model,

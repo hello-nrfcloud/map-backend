@@ -29,7 +29,7 @@ import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
 import middy from '@middy/core'
 import { getSettings } from '../settings/hello.js'
 import { helloApi } from '../hello/api.js'
-import { Email } from '../util/validation/email.js'
+import { Email } from '@hello.nrfcloud.com/proto-map/api'
 
 const {
 	publicDevicesTableName,
@@ -144,7 +144,7 @@ const publish = async ({
 		deviceId,
 		model,
 		email,
-		generateToken: isTest ? () => '123456' : undefined,
+		generateToken: isTest ? () => 'ABC123' : undefined,
 	})
 	if ('error' in maybePublished) {
 		if (maybePublished.error instanceof ConditionalCheckFailedException) {

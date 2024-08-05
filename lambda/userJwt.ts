@@ -9,21 +9,21 @@ import {
 	formatTypeBoxErrors,
 	validateWithTypeBox,
 } from '@hello.nrfcloud.com/proto'
-import { Context, PublicDeviceId } from '@hello.nrfcloud.com/proto-map/api'
+import { Context, Email } from '@hello.nrfcloud.com/proto-map/api'
 import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { deviceJWT } from '../jwt/deviceJWT.js'
-import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
+import { userJWT } from '../jwt/userJWT.js'
 import { getSettings } from '../settings/jwt.js'
+import { emailConfirmationTokensRepo } from '../users/emailConfirmationTokensRepo.js'
+import { tryAsJSON } from '@hello.nrfcloud.com/lambda-helpers/tryAsJSON'
 
-const { TableName, version, idIndex, stackName } = fromEnv({
+const { TableName, version, stackName } = fromEnv({
 	version: 'VERSION',
-	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
-	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
+	TableName: 'EMAIL_CONFIRMATION_TOKENS_TABLE_NAME',
 	stackName: 'STACK_NAME',
 })(process.env)
 
@@ -32,11 +32,16 @@ const ssm = new SSMClient({})
 
 const validateInput = validateWithTypeBox(
 	Type.Object({
-		id: PublicDeviceId,
+		email: Email,
+		token: Type.String({
+			minLength: 1,
+			title: 'Token',
+			description: 'The current email confirmation token',
+		}),
 	}),
 )
 
-const devicesRepo = publicDevicesRepo({ db, TableName, idIndex })
+const tokenRepo = emailConfirmationTokensRepo({ db, TableName })
 
 const jwtSettings = await getSettings({ ssm, stackName })
 
@@ -45,7 +50,7 @@ const h = async (
 ): Promise<APIGatewayProxyResultV2> => {
 	console.log(JSON.stringify({ event }))
 
-	const maybeValidQuery = validateInput(event.pathParameters)
+	const maybeValidQuery = validateInput(tryAsJSON(event.body))
 
 	if ('errors' in maybeValidQuery) {
 		return aProblem({
@@ -55,31 +60,31 @@ const h = async (
 		})
 	}
 
-	const { id } = maybeValidQuery.value
+	const { email, token } = maybeValidQuery.value
 
-	const maybeSharedDevice = await devicesRepo.getById(id)
+	const maybeValidToken = await tokenRepo.verifyToken({
+		email,
+		token,
+	})
 
-	if ('error' in maybeSharedDevice) {
+	if ('error' in maybeValidToken) {
 		return aProblem({
-			title: `Device with id ${maybeValidQuery.value.id} not shared: ${maybeSharedDevice.error}`,
-			status: 404,
+			title: maybeValidToken.error.message,
+			status: 400,
 		})
 	}
 
 	return aResponse(
 		201,
 		{
-			'@context': Context.deviceJWT,
-			id: maybeSharedDevice.device.id,
-			deviceId: maybeSharedDevice.device.deviceId,
-			model: maybeSharedDevice.device.model,
-			jwt: deviceJWT(maybeSharedDevice.device, jwtSettings),
+			'@context': Context.userJWT,
+			jwt: userJWT(email, jwtSettings),
 		},
-		60 * 50, // 50 Minutes
+		60 * 60 * 24, // 24 hours
 	)
 }
 
 export const handler = middy()
 	.use(addVersionHeader(version))
-	.use(corsOPTIONS('GET'))
+	.use(corsOPTIONS('POST'))
 	.handler(h)

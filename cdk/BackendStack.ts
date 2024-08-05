@@ -23,6 +23,8 @@ import {
 	type CustomDomainDetails,
 } from './resources/api/CustomDomain.js'
 import { JWKS } from './resources/JWKS.js'
+import { EmailConfirmationTokens } from './resources/EmailConfirmationTokens.js'
+import { UserAuthAPI } from './resources/UserAuthAPI.js'
 
 /**
  * Provides resources for the backend serving data to hello.nrfcloud.com/map
@@ -166,6 +168,18 @@ export class BackendStack extends Stack {
 		})
 
 		api.addRoute('POST /credentials', credentialsAPI.createCredentials)
+
+		// User accounts
+		const emailConfirmationTokens = new EmailConfirmationTokens(this)
+		const userAuthAPI = new UserAuthAPI(this, {
+			domain,
+			baseLayer,
+			jwtLayer: jwtLayerVersion,
+			lambdaSources,
+			emailConfirmationTokens,
+		})
+		api.addRoute('POST /auth', userAuthAPI.requestTokenFn)
+		api.addRoute('POST /auth/jwt', userAuthAPI.createJWTFn)
 
 		// JWKS
 

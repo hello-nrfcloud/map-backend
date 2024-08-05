@@ -244,7 +244,7 @@ void describe('toPublic()', () => {
 			model: ModelID.Thingy91x,
 			ownerConfirmed: new Date(),
 			ownerEmail: 'alex@example.com',
-			ownershipConfirmationToken: '123456',
+			ownershipConfirmationToken: 'ABC123',
 			ownershipConfirmationTokenCreated: new Date(),
 			ttl: Date.now(),
 		})

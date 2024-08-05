@@ -23,7 +23,9 @@ public device id in `publicDeviceId`
 
 When I `GET` to `${API}/device/${publicDeviceId}/jwt`
 
-Then I should receive a `https://github.com/hello-nrfcloud/proto-map/device-jwt`
+Then the status code of the last response should be `201`
+
+And I should receive a `https://github.com/hello-nrfcloud/proto-map/device-jwt`
 response
 
 And I store `jwt` of the last response into `jwt`
@@ -33,6 +35,7 @@ payload
 
 ```json
 {
+  "@context": "https://github.com/hello-nrfcloud/proto-map/device-jwt",
   "id": "${publicDeviceId}",
   "deviceId": "${deviceId}",
   "model": "thingy91x"
