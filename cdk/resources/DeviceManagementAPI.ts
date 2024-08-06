@@ -65,6 +65,6 @@ export class DeviceManagementAPI extends Construct {
 			},
 		).fn
 		openSSLFn.grantInvoke(this.createDevice)
-		publicDevices.publicDevicesTable.grantReadData(this.createDevice)
+		publicDevices.publicDevicesTable.grantWriteData(this.createDevice)
 	}
 }

@@ -5,7 +5,6 @@ export type BackendLambdas = {
 	shareDevice: PackedLambda
 	sharingStatus: PackedLambda
 	sharingStatusFingerprint: PackedLambda
-	confirmOwnership: PackedLambda
 	devicesData: PackedLambda
 	createDevice: PackedLambda
 	openSSL: PackedLambda
@@ -23,7 +22,6 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	shareDevice: await pack('shareDevice'),
 	sharingStatus: await pack('sharingStatus'),
 	sharingStatusFingerprint: await pack('sharingStatusFingerprint'),
-	confirmOwnership: await pack('confirmOwnership'),
 	devicesData: await pack('devicesData'),
 	createDevice: await pack('createDevice'),
 	openSSL: await pack('openSSL'),

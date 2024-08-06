@@ -16,6 +16,7 @@ export class API extends Construct {
 
 		this.api = new HttpApi.CfnApi(this, 'api', {
 			name: 'hello.nrfcloud.com/map API',
+			description: `Provided by the ${Stack.of(this).stackName} stack`,
 			protocolType: 'HTTP',
 		})
 

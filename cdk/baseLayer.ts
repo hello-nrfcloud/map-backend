@@ -10,6 +10,7 @@ const dependencies: Array<keyof (typeof pJson)['dependencies']> = [
 	'@hello.nrfcloud.com/proto-map',
 	'@hello.nrfcloud.com/proto',
 	'@middy/core',
+	'@middy/input-output-logger',
 	'lodash-es',
 	'@bifravst/random-words',
 	'@bifravst/timestream-helpers',
@@ -17,6 +18,7 @@ const dependencies: Array<keyof (typeof pJson)['dependencies']> = [
 	'@hello.nrfcloud.com/nrfcloud-api-helpers',
 	'@hello.nrfcloud.com/lambda-helpers',
 	'id128',
+	'jsonwebtoken',
 ]
 
 export const pack = async (): Promise<PackedLayer> =>

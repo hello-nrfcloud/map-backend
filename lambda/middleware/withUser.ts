@@ -10,7 +10,7 @@ import type {
 export const withUser = ({
 	verify,
 }: {
-	verify: (token: string) => WithUser | { error: Error }
+	verify: (token?: string) => WithUser | { error: Error }
 }): MiddlewareObj<
 	APIGatewayProxyEventV2,
 	APIGatewayProxyStructuredResultV2,
@@ -19,7 +19,7 @@ export const withUser = ({
 > => ({
 	before: async (req) => {
 		const maybeValidJWT = verify(
-			req.event.headers.Authorizer?.split(' ')[1] ?? '',
+			req.event.headers.authorization?.split(' ')[1] ?? '',
 		)
 		if ('error' in maybeValidJWT) {
 			console.error(`[withUser:jwt]`, maybeValidJWT.error)

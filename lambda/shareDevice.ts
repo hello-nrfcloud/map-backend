@@ -16,10 +16,14 @@ import {
 	validateInput,
 	type ValidInput,
 } from '@hello.nrfcloud.com/lambda-helpers/validateInput'
-import { Context, Model } from '@hello.nrfcloud.com/proto-map/api'
+import {
+	Context,
+	Model,
+	type PublicDevice,
+} from '@hello.nrfcloud.com/proto-map/api'
 import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
 import middy from '@middy/core'
-import { Type } from '@sinclair/typebox'
+import { Type, type Static } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
@@ -119,10 +123,15 @@ const publish = async ({
 
 	console.debug(JSON.stringify({ deviceId, model, email }))
 
-	return aResponse(200, {
-		'@context': Context.shareDevice.request,
+	const deviceInfo: Static<typeof PublicDevice> = {
+		'@context': Context.device.toString(),
 		id: maybePublished.device.id,
 		deviceId,
+		model,
+	}
+	return aResponse(200, {
+		...deviceInfo,
+		'@context': Context.device,
 	})
 }
 

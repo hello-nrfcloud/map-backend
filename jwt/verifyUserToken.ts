@@ -6,12 +6,12 @@ import { ValidationError } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 const validateUserJWTPayload = validateWithTypeBox(UserJWTPayload)
 
 /**
- * Validate a device JWT
+ * Validate a user JWT
  */
 export const verifyUserToken =
 	(publicKeys: Map<string, string>) =>
 	(
-		token: string,
+		token?: string,
 	):
 		| {
 				user: {
@@ -20,12 +20,14 @@ export const verifyUserToken =
 		  }
 		| { error: Error } => {
 		try {
+			if (token === undefined) return { error: new Error('No token provided') }
+
 			const decoded = jwt.decode(token, { complete: true })
 
 			const header = decoded?.header as jwt.JwtHeader
 			const payload = decoded?.payload as jwt.JwtPayload
 
-			if (header.kid === undefined)
+			if (header?.kid === undefined)
 				return { error: new Error('No key ID found in JWT header') }
 
 			const publicKey = publicKeys.get(header.kid)

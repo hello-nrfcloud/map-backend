@@ -160,7 +160,7 @@ const h = async (
 	}
 
 	return aResponse(
-		200,
+		201,
 		{
 			...res,
 			'@context': Context.deviceCredentials,
