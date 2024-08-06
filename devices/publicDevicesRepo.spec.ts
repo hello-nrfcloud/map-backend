@@ -1,21 +1,15 @@
-import { describe, it, mock } from 'node:test'
-import assert from 'node:assert/strict'
-import { publicDevicesRepo, toPublic } from './publicDevicesRepo.js'
 import { marshall } from '@aws-sdk/util-dynamodb'
-import { assertCall } from '../util/test/assertCall.js'
-import { randomUUID } from 'node:crypto'
-import { consentDurationSeconds } from './consentDuration.js'
-import {
-	generateCode,
-	alphabet,
-	numbers,
-} from '@hello.nrfcloud.com/proto/fingerprint'
 import { ModelID } from '@hello.nrfcloud.com/proto-map/models'
+import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
+import { describe, it, mock } from 'node:test'
+import { assertCall } from '../util/test/assertCall.js'
+import { consentDurationSeconds } from './consentDuration.js'
+import { publicDevicesRepo, toPublic } from './publicDevicesRepo.js'
 
 void describe('publicDevicesRepo()', () => {
 	void describe('getByDeviceId()', () => {
 		void it('should fetch device data', async () => {
-			const ownerConfirmed = new Date()
 			const id = randomUUID()
 			const send = mock.fn(async () =>
 				Promise.resolve({
@@ -23,7 +17,6 @@ void describe('publicDevicesRepo()', () => {
 						id,
 						deviceId: 'some-device',
 						model: 'thingy91x',
-						ownerConfirmed: ownerConfirmed.toISOString(),
 					}),
 				}),
 			)
@@ -40,7 +33,6 @@ void describe('publicDevicesRepo()', () => {
 						id,
 						model: 'thingy91x',
 						deviceId: 'some-device',
-						ownerConfirmed: ownerConfirmed.toISOString(),
 					},
 				},
 			)
@@ -98,66 +90,6 @@ void describe('publicDevicesRepo()', () => {
 					}),
 				},
 			})
-
-			assert.match(
-				(send.mock.calls[0]?.arguments as any)?.[0]?.input.Item
-					.ownershipConfirmationToken.S,
-				new RegExp(`^[${alphabet.toUpperCase()}${numbers}]{6}$`),
-				'A code should have been generated.',
-			)
-		})
-	})
-
-	void describe('confirmOwnership()', () => {
-		void it('should confirm the ownership by a user', async () => {
-			const id = randomUUID()
-			const ownershipConfirmationToken = generateCode()
-
-			const send = mock.fn(async () =>
-				Promise.resolve({
-					Attributes: marshall({ id }),
-				}),
-			)
-
-			const now = new Date()
-
-			const res = await publicDevicesRepo({
-				db: {
-					send,
-				} as any,
-				TableName: 'some-table',
-				now,
-				idIndex: 'idIndex',
-			}).confirmOwnership({
-				deviceId: id,
-				ownershipConfirmationToken,
-			})
-
-			assert.deepEqual(res, {
-				device: {
-					id,
-				},
-			})
-
-			assertCall(send, {
-				input: {
-					TableName: 'some-table',
-					Key: {
-						deviceId: { S: id },
-					},
-					UpdateExpression: 'SET #ownerConfirmed = :now',
-					ExpressionAttributeNames: {
-						'#ownerConfirmed': 'ownerConfirmed',
-						'#token': 'ownershipConfirmationToken',
-					},
-					ExpressionAttributeValues: {
-						':now': { S: now.toISOString() },
-						':token': { S: ownershipConfirmationToken },
-					},
-					ConditionExpression: '#token = :token',
-					ReturnValues: 'ALL_NEW',
-				},
-			})
 		})
 	})
 })
@@ -185,7 +117,6 @@ void describe('getById()', () => {
 						id,
 						deviceId: 'some-device',
 						model: 'thingy91x',
-						ownerConfirmed: new Date().toISOString(),
 					}),
 				}),
 			1,
@@ -242,10 +173,7 @@ void describe('toPublic()', () => {
 			id,
 			deviceId: 'some-device',
 			model: ModelID.Thingy91x,
-			ownerConfirmed: new Date(),
 			ownerEmail: 'alex@example.com',
-			ownershipConfirmationToken: '123456',
-			ownershipConfirmationTokenCreated: new Date(),
 			ttl: Date.now(),
 		})
 		assert.deepEqual(record, {

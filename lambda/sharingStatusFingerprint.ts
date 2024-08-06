@@ -1,25 +1,27 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import {
-	formatTypeBoxErrors,
-	validateWithTypeBox,
-} from '@hello.nrfcloud.com/proto'
-import { Context } from '@hello.nrfcloud.com/proto-map/api'
+import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@bifravst/from-env'
+import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
+import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
+import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
+import {
+	validateInput,
+	type ValidInput,
+} from '@hello.nrfcloud.com/lambda-helpers/validateInput'
+import { Context } from '@hello.nrfcloud.com/proto-map/api'
+import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
+import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
+	Context as LambdaContext,
 } from 'aws-lambda'
 import { publicDevicesRepo, toPublic } from '../devices/publicDevicesRepo.js'
-import middy from '@middy/core'
-import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
-import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
-import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
-import { fingerprintRegExp } from '@hello.nrfcloud.com/proto/fingerprint'
 import { helloApi } from '../hello/api.js'
 import { getSettings } from '../settings/hello.js'
-import { SSMClient } from '@aws-sdk/client-ssm'
 
 const { TableName, version, idIndex, stackName } = fromEnv({
 	version: 'VERSION',
@@ -31,11 +33,9 @@ const { TableName, version, idIndex, stackName } = fromEnv({
 const db = new DynamoDBClient({})
 const ssm = new SSMClient({})
 
-const validateInput = validateWithTypeBox(
-	Type.Object({
-		fingerprint: Type.RegExp(fingerprintRegExp),
-	}),
-)
+const InputSchema = Type.Object({
+	fingerprint: Type.RegExp(fingerprintRegExp),
+})
 
 const devicesRepo = publicDevicesRepo({ db, TableName, idIndex })
 
@@ -47,21 +47,10 @@ const hello = helloApi({
 
 const h = async (
 	event: APIGatewayProxyEventV2,
+	context: ValidInput<typeof InputSchema> & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
-	console.log(JSON.stringify({ event }))
-
-	const maybeValidQuery = validateInput(event.queryStringParameters)
-
-	if ('errors' in maybeValidQuery) {
-		return aProblem({
-			title: 'Validation failed',
-			status: 400,
-			detail: formatTypeBoxErrors(maybeValidQuery.errors),
-		})
-	}
-
 	const maybeDevice = await hello.getDeviceByFingerprint(
-		maybeValidQuery.value.fingerprint,
+		context.validInput.fingerprint,
 	)
 	if ('error' in maybeDevice) {
 		return aProblem(maybeDevice.error)
@@ -76,7 +65,7 @@ const h = async (
 
 	if ('error' in maybeSharedDevice) {
 		return aProblem({
-			title: `Device with fingerprint ${maybeValidQuery.value.fingerprint} not shared: ${maybeSharedDevice.error}`,
+			title: `Device with fingerprint ${context.validInput.fingerprint} not shared: ${maybeSharedDevice.error}`,
 			status: 404,
 		})
 	}
@@ -94,4 +83,6 @@ const h = async (
 export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(corsOPTIONS('GET'))
+	.use(requestLogger())
+	.use(validateInput(InputSchema))
 	.handler(h)

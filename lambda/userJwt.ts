@@ -10,7 +10,7 @@ import {
 	validateInput,
 	type ValidInput,
 } from '@hello.nrfcloud.com/lambda-helpers/validateInput'
-import { Context, PublicDeviceId } from '@hello.nrfcloud.com/proto-map/api'
+import { Context, Email } from '@hello.nrfcloud.com/proto-map/api'
 import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
@@ -18,14 +18,13 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
-import { deviceJWT } from '../jwt/deviceJWT.js'
+import { userJWT } from '../jwt/userJWT.js'
 import { getSettings } from '../settings/jwt.js'
+import { emailConfirmationTokensRepo } from '../users/emailConfirmationTokensRepo.js'
 
-const { TableName, version, idIndex, stackName } = fromEnv({
+const { TableName, version, stackName } = fromEnv({
 	version: 'VERSION',
-	TableName: 'PUBLIC_DEVICES_TABLE_NAME',
-	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
+	TableName: 'EMAIL_CONFIRMATION_TOKENS_TABLE_NAME',
 	stackName: 'STACK_NAME',
 })(process.env)
 
@@ -33,10 +32,15 @@ const db = new DynamoDBClient({})
 const ssm = new SSMClient({})
 
 const InputSchema = Type.Object({
-	id: PublicDeviceId,
+	email: Email,
+	token: Type.String({
+		minLength: 1,
+		title: 'Token',
+		description: 'The current email confirmation token',
+	}),
 })
 
-const devicesRepo = publicDevicesRepo({ db, TableName, idIndex })
+const tokenRepo = emailConfirmationTokensRepo({ db, TableName })
 
 const jwtSettings = await getSettings({ ssm, stackName })
 
@@ -44,31 +48,33 @@ const h = async (
 	event: APIGatewayProxyEventV2,
 	context: ValidInput<typeof InputSchema> & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
-	const maybeSharedDevice = await devicesRepo.getById(context.validInput.id)
+	const { email, token } = context.validInput
 
-	if ('error' in maybeSharedDevice) {
+	const maybeValidToken = await tokenRepo.verifyToken({
+		email,
+		token,
+	})
+
+	if ('error' in maybeValidToken) {
 		return aProblem({
-			title: `Device with id ${context.validInput.id} not shared: ${maybeSharedDevice.error}`,
-			status: 404,
+			title: maybeValidToken.error.message,
+			status: 400,
 		})
 	}
 
 	return aResponse(
 		201,
 		{
-			'@context': Context.deviceJWT,
-			id: maybeSharedDevice.device.id,
-			deviceId: maybeSharedDevice.device.deviceId,
-			model: maybeSharedDevice.device.model,
-			jwt: deviceJWT(maybeSharedDevice.device, jwtSettings),
+			'@context': Context.userJWT,
+			jwt: userJWT(email, jwtSettings),
 		},
-		60 * 50, // 50 Minutes
+		60 * 60 * 24, // 24 hours
 	)
 }
 
 export const handler = middy()
 	.use(addVersionHeader(version))
-	.use(corsOPTIONS('GET'))
+	.use(corsOPTIONS('POST'))
 	.use(requestLogger())
 	.use(validateInput(InputSchema))
 	.handler(h)

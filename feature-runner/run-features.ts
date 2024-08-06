@@ -17,6 +17,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { slashless } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { getSettings } from '../settings/jwt.js'
+import { steps as mocknRFCloudSteps } from '@hello.nrfcloud.com/bdd-markdown-steps/mocknRFCloud'
 
 /**
  * This file configures the BDD Feature runner
@@ -29,7 +30,7 @@ const iotData = new IoTDataPlaneClient({})
 const db = new DynamoDBClient({})
 const ssm = new SSMClient({})
 
-const { mockApiEndpoint, responsesTableName } = fromEnv({
+const { mockApiEndpoint, responsesTableName, requestsTableName } = fromEnv({
 	mockApiEndpoint: 'HTTP_API_MOCK_API_URL',
 	responsesTableName: 'HTTP_API_MOCK_RESPONSES_TABLE_NAME',
 	requestsTableName: 'HTTP_API_MOCK_REQUESTS_TABLE_NAME',
@@ -106,6 +107,16 @@ runner
 	)
 	.addStepRunners(
 		...jwtSteps({ publicKey: jwtSettings.publicKey, keyId: jwtSettings.keyId }),
+	)
+	.addStepRunners(
+		...mocknRFCloudSteps({
+			db,
+			ssm,
+			stackName: STACK_NAME,
+			responsesTableName,
+			requestsTableName,
+			prefix: 'api.nrfcloud.com',
+		}),
 	)
 
 const res = await runner.run({

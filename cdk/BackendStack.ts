@@ -12,7 +12,7 @@ import { PublicDevices } from './resources/PublicDevices.js'
 import { ShareAPI } from './resources/ShareAPI.js'
 import { STACK_NAME } from './stackConfig.js'
 import { DevicesAPI } from './resources/DevicesAPI.js'
-import { CredentialsAPI } from './resources/CredentialsAPI.js'
+import { DeviceManagementAPI } from './resources/DeviceManagementAPI.js'
 import { ContainerRepositoryId } from '../aws/ecr.js'
 import { repositoryName } from '@bifravst/aws-cdk-ecr-helpers/repository'
 import { ContinuousDeployment } from '@bifravst/ci'
@@ -23,6 +23,8 @@ import {
 	type CustomDomainDetails,
 } from './resources/api/CustomDomain.js'
 import { JWKS } from './resources/JWKS.js'
+import { EmailConfirmationTokens } from './resources/EmailConfirmationTokens.js'
+import { UserAuthAPI } from './resources/UserAuthAPI.js'
 
 /**
  * Provides resources for the backend serving data to hello.nrfcloud.com/map
@@ -55,7 +57,9 @@ export class BackendStack extends Stack {
 			gitHubOICDProviderArn: string
 		},
 	) {
-		super(parent, STACK_NAME)
+		super(parent, STACK_NAME, {
+			description: 'Provides the hello.nrfcloud.com/map backend.',
+		})
 
 		const baseLayer = new Lambda.LayerVersion(this, 'baseLayer', {
 			layerVersionName: `${Stack.of(this).stackName}-baseLayer`,
@@ -127,14 +131,12 @@ export class BackendStack extends Stack {
 		}
 
 		const shareAPI = new ShareAPI(this, {
-			domain,
 			baseLayer,
 			jwtLayer: jwtLayerVersion,
 			lambdaSources,
 			publicDevices,
 		})
 		api.addRoute('POST /share', shareAPI.shareFn)
-		api.addRoute('POST /share/confirm', shareAPI.confirmOwnershipFn)
 		api.addRoute('GET /share/status', shareAPI.sharingStatusFingerprintFn)
 		api.addRoute('GET /device/{id}', shareAPI.sharingStatusFn)
 		api.addRoute('GET /device/{id}/jwt', shareAPI.deviceJwtFn)
@@ -146,7 +148,7 @@ export class BackendStack extends Stack {
 		})
 		api.addRoute('GET /devices', devicesAPI.devicesFn)
 
-		const credentialsAPI = new CredentialsAPI(this, {
+		const credentialsAPI = new DeviceManagementAPI(this, {
 			baseLayer,
 			lambdaSources,
 			openSSLContainerImage: {
@@ -163,7 +165,19 @@ export class BackendStack extends Stack {
 			publicDevices,
 		})
 
-		api.addRoute('POST /credentials', credentialsAPI.createCredentials)
+		api.addRoute('POST /device', credentialsAPI.createDevice)
+
+		// User accounts
+		const emailConfirmationTokens = new EmailConfirmationTokens(this)
+		const userAuthAPI = new UserAuthAPI(this, {
+			domain,
+			baseLayer,
+			jwtLayer: jwtLayerVersion,
+			lambdaSources,
+			emailConfirmationTokens,
+		})
+		api.addRoute('POST /auth', userAuthAPI.requestTokenFn)
+		api.addRoute('POST /auth/jwt', userAuthAPI.createJWTFn)
 
 		// JWKS
 

@@ -4,18 +4,19 @@ import path from 'node:path'
 import run from '@bifravst/run'
 import { createCA } from '@hello.nrfcloud.com/certificate-helpers/ca'
 import { createDeviceCertificate } from '@hello.nrfcloud.com/certificate-helpers/device'
+import middy from '@middy/core'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 
 /**
  * Allows to use OpenSSL
  */
-export const handler = async (event: {
+const h = async (event: {
 	id: string
 	email: string
 }): Promise<{
 	privateKey: string
 	certificate: string
 } | null> => {
-	console.log(JSON.stringify({ event }))
 	const { id, email } = event
 	if (id === undefined || email === undefined) {
 		console.debug(`Missing email and id.`)
@@ -50,3 +51,5 @@ export const handler = async (event: {
 		certificate,
 	}
 }
+
+export const handler = middy().use(requestLogger()).handler(h)

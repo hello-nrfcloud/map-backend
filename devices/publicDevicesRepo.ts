@@ -1,16 +1,14 @@
 import {
-	type DynamoDBClient,
-	PutItemCommand,
-	GetItemCommand,
-	UpdateItemCommand,
-	QueryCommand,
 	DeleteItemCommand,
+	type DynamoDBClient,
+	GetItemCommand,
+	PutItemCommand,
+	QueryCommand,
 } from '@aws-sdk/client-dynamodb'
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
-import { models } from '@hello.nrfcloud.com/proto-map/models'
-import { consentDurationMS, consentDurationSeconds } from './consentDuration.js'
-import { generateCode } from '@hello.nrfcloud.com/proto/fingerprint'
 import { randomWords } from '@bifravst/random-words'
+import { models } from '@hello.nrfcloud.com/proto-map/models'
+import { consentDurationSeconds } from './consentDuration.js'
 
 export type PublicDeviceRecord = {
 	/**
@@ -28,9 +26,6 @@ export type PublicDeviceRecord = {
 	deviceId: string
 	model: keyof typeof models
 	ownerEmail: string
-	ownershipConfirmationToken: string
-	ownershipConfirmationTokenCreated: Date
-	ownerConfirmed?: Date
 	ttl: number
 }
 
@@ -48,13 +43,11 @@ export const publicDevicesRepo = ({
 	db,
 	TableName,
 	now,
-	superUsersEmailDomain,
 	idIndex,
 }: {
 	db: DynamoDBClient
 	TableName: string
 	now?: Date
-	superUsersEmailDomain?: string
 	idIndex: string
 }): {
 	/**
@@ -66,28 +59,7 @@ export const publicDevicesRepo = ({
 	getById: (
 		id: string,
 	) => Promise<{ device: PublicDeviceRecord } | PublicDeviceRecordError>
-	share: (args: {
-		deviceId: string
-		model: string
-		email: string
-		generateToken?: () => string
-		// Mark device as confirmed. Can only be used if email address is `...@nordicsemi.no`.
-		confirmed?: true
-	}) => Promise<
-		| {
-				error: Error
-		  }
-		| {
-				device: {
-					id: string
-					ownershipConfirmationToken: string
-				}
-		  }
-	>
-	confirmOwnership: (args: {
-		deviceId: string
-		ownershipConfirmationToken: string
-	}) => Promise<
+	share: (args: { deviceId: string; model: string; email: string }) => Promise<
 		| {
 				error: Error
 		  }
@@ -119,11 +91,7 @@ export const publicDevicesRepo = ({
 		)
 		if (Item === undefined) return { error: 'not_found' }
 		const device = unmarshall(Item) as PublicDeviceRecord
-		if (device.ownerConfirmed === undefined || device.ownerConfirmed === null)
-			return { error: 'not_confirmed' }
-		const ownerConfirmed = new Date(device.ownerConfirmed)
-		if (ownerConfirmed.getTime() + consentDurationMS < Date.now())
-			return { error: 'confirmation_expired' }
+		if (device.ttl * 1000 < Date.now()) return { error: 'confirmation_expired' }
 		if (!modelNames.includes(device.model))
 			return { error: 'unsupported_model' }
 		return {
@@ -154,20 +122,9 @@ export const publicDevicesRepo = ({
 			if (device === undefined) return { error: 'not_found' }
 			return await getByDeviceId(unmarshall(device).deviceId)
 		},
-		share: async ({ deviceId, model, email, generateToken, confirmed }) => {
+		// TODO: limit the amount of devices that can be created by a user
+		share: async ({ deviceId, model, email }) => {
 			const id = randomWords({ numWords: 3 }).join('-')
-			const ownershipConfirmationToken = (
-				generateToken?.() ?? generateCode()
-			).toUpperCase()
-
-			if (
-				confirmed === true &&
-				!email.endsWith(`@${superUsersEmailDomain ?? 'nordicsemi.no'}`)
-			) {
-				throw new Error(
-					`Only devices owned by ${superUsersEmailDomain ?? 'nordicsemi.no'} can be shared without confirmation!`,
-				)
-			}
 
 			try {
 				await db.send(
@@ -182,16 +139,6 @@ export const publicDevicesRepo = ({
 									consentDurationSeconds,
 								model,
 								ownerEmail: email,
-								...(confirmed === true
-									? {
-											ownerConfirmed: (now ?? new Date()).toISOString(),
-										}
-									: {
-											ownershipConfirmationToken,
-											ownershipConfirmationTokenCreated: (
-												now ?? new Date()
-											).toISOString(),
-										}),
 							},
 							{
 								removeUndefinedValues: true,
@@ -209,42 +156,7 @@ export const publicDevicesRepo = ({
 			return {
 				device: {
 					id,
-					ownershipConfirmationToken,
 				},
-			}
-		},
-		confirmOwnership: async ({ deviceId, ownershipConfirmationToken }) => {
-			try {
-				const { Attributes } = await db.send(
-					new UpdateItemCommand({
-						TableName,
-						Key: marshall({
-							deviceId,
-						}),
-						UpdateExpression: 'SET #ownerConfirmed = :now',
-						ExpressionAttributeNames: {
-							'#ownerConfirmed': 'ownerConfirmed',
-							'#token': 'ownershipConfirmationToken',
-						},
-						ExpressionAttributeValues: {
-							':now': {
-								S: (now ?? new Date()).toISOString(),
-							},
-							':token': {
-								S: ownershipConfirmationToken,
-							},
-						},
-						ConditionExpression: '#token = :token',
-						ReturnValues: 'ALL_NEW',
-					}),
-				)
-				return {
-					device: {
-						id: Attributes?.['id']?.S as string,
-					},
-				}
-			} catch (err) {
-				return { error: err as Error }
 			}
 		},
 		remove: async (deviceId) => {

@@ -4,6 +4,8 @@ exampleContext:
   deviceId: oob-352656108602296
   publicDeviceId: outfling-swanherd-attaghan
   API: "https://api.nordicsemi.world/2024-04-15"
+  email: alex@example.com
+  jwt: eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6Ijg1NDdiNWIyLTdiNDctNDFlNC1iZjJkLTdjZGZmNDhiM2VhNCJ9.eyJAY29udGV4dCI6Imh0dHBzOi8vZ2l0aHViLmNvbS9oZWxsby1ucmZjbG91ZC9wcm90by1tYXAvdXNlci1qd3QiLCJlbWFpbCI6ImVkYjJiZDM3QGV4YW1wbGUuY29tIiwiaWF0IjoxNzIyODcxNTYyLCJleHAiOjE3MjI5NTc5NjIsImF1ZCI6ImhlbGxvLm5yZmNsb3VkLmNvbSJ9.ALiHjxR7HIjuYQBvPVh5-GMs-2f-pMGs_FTz-x0HGzQ4amLASeUGEZ7X_y-_mgZpYu8VKGm6be0LtIIx9DgYBff1ASfmQH327rub0a2-DjXW-JUJQn_6t6H6_JhvPZ9jWBSzy3Tbpp9NmTUNmHgEwzyoctnmgp0oo26VEwc4r6YGQWkZ
 ---
 
 # Sharing an out-of-box experience device on the map
@@ -25,41 +27,57 @@ Given I have the fingerprint for my device in `fingerprint`
 
 And I have a random email in `email`
 
+## Request confirmation token
+
+When I `POST` to `${API}/auth` with
+
+```json
+{
+  "email": "${email}"
+}
+```
+
+Then the status code of the last response should be `201`
+
+## Exchange the confirmation token for a JWT
+
+> The user has acquired the confirmation token from their mailbox.  
+> In the test system, the code is always `ABC123`
+
+When I `POST` to `${API}/auth/jwt` with
+
+```json
+{
+  "email": "${email}",
+  "token": "ABC123"
+}
+```
+
+Then the status code of the last response should be `201`
+
+And I store `jwt` of the last response into `jwt`
+
 ## Share the device
 
 > Using the device fingerprint I can share the device
+
+Given the `Authorization` header of the next request is `Bearer ${jwt}`
 
 When I `POST` to `${API}/share` with
 
 ```json
 {
   "fingerprint": "${fingerprint}",
-  "model": "thingy91x",
-  "email": "${email}"
+  "model": "thingy91x"
 }
 ```
 
-Then I should receive a
-`https://github.com/hello-nrfcloud/proto-map/share-device-request` response
+Then I should receive a `https://github.com/hello-nrfcloud/proto-map/device`
+response
 
 And I store `id` of the last response into `publicDeviceId`
 
 And I store `deviceId` of the last response into `deviceId`
-
-## Confirm the email
-
-When I `POST` to `${API}/share/confirm` with
-
-```json
-{
-  "deviceId": "${deviceId}",
-  "token": "123456"
-}
-```
-
-Then I should receive a
-`https://github.com/hello-nrfcloud/proto-map/share-device-ownership-confirmed`
-response
 
 ## The sharing status of a device can be checked using the device ID
 

@@ -1,22 +1,23 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import {
-	formatTypeBoxErrors,
-	validateWithTypeBox,
-} from '@hello.nrfcloud.com/proto'
-import { Context } from '@hello.nrfcloud.com/proto-map/api'
-import { DeviceId } from '@hello.nrfcloud.com/proto-map/api'
 import { fromEnv } from '@bifravst/from-env'
+import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
+import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
+import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
+import {
+	validateInput,
+	type ValidInput,
+} from '@hello.nrfcloud.com/lambda-helpers/validateInput'
+import { Context, DeviceId } from '@hello.nrfcloud.com/proto-map/api'
+import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
+	Context as LambdaContext,
 } from 'aws-lambda'
 import { publicDevicesRepo, toPublic } from '../devices/publicDevicesRepo.js'
-import middy from '@middy/core'
-import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
-import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
-import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 
 const { TableName, version, idIndex } = fromEnv({
 	version: 'VERSION',
@@ -26,36 +27,23 @@ const { TableName, version, idIndex } = fromEnv({
 
 const db = new DynamoDBClient({})
 
-const validateInput = validateWithTypeBox(
-	Type.Object({
-		id: DeviceId,
-	}),
-)
+const InputSchema = Type.Object({
+	id: DeviceId,
+})
 
 const devicesRepo = publicDevicesRepo({ db, TableName, idIndex })
 
 const h = async (
 	event: APIGatewayProxyEventV2,
+	context: ValidInput<typeof InputSchema> & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
-	console.log(JSON.stringify({ event }))
-
-	const maybeValidQuery = validateInput(event.pathParameters)
-
-	if ('errors' in maybeValidQuery) {
-		return aProblem({
-			title: 'Validation failed',
-			status: 400,
-			detail: formatTypeBoxErrors(maybeValidQuery.errors),
-		})
-	}
-
-	const maybeDevice = await devicesRepo.getById(maybeValidQuery.value.id)
+	const maybeDevice = await devicesRepo.getById(context.validInput.id)
 
 	console.log(JSON.stringify(maybeDevice))
 
 	if ('error' in maybeDevice) {
 		return aProblem({
-			title: `Device ${maybeValidQuery.value.id} not shared: ${maybeDevice.error}`,
+			title: `Device ${context.validInput.id} not shared: ${maybeDevice.error}`,
 			status: 404,
 		})
 	}
@@ -73,4 +61,6 @@ const h = async (
 export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(corsOPTIONS('GET'))
+	.use(requestLogger())
+	.use(validateInput(InputSchema))
 	.handler(h)
