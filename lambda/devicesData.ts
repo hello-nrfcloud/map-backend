@@ -9,27 +9,27 @@ import {
 	ResourceNotFoundException,
 } from '@aws-sdk/client-iot-data-plane'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import {
-	formatTypeBoxErrors,
-	validateWithTypeBox,
-} from '@hello.nrfcloud.com/proto'
-import { models } from '@hello.nrfcloud.com/proto-map/models'
-import { Context } from '@hello.nrfcloud.com/proto-map/api'
-import { PublicDeviceId } from '@hello.nrfcloud.com/proto-map/api'
 import { fromEnv } from '@bifravst/from-env'
+import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
+import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
+import {
+	validateInput,
+	type ValidInput,
+} from '@hello.nrfcloud.com/lambda-helpers/validateInput'
+import { Context, PublicDeviceId } from '@hello.nrfcloud.com/proto-map/api'
+import type { LwM2MObjectInstance } from '@hello.nrfcloud.com/proto-map/lwm2m'
+import { shadowToObjects } from '@hello.nrfcloud.com/proto-map/lwm2m/aws'
+import { models } from '@hello.nrfcloud.com/proto-map/models'
+import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
+	Context as LambdaContext,
 } from 'aws-lambda'
 import { consentDurationMS } from '../devices/consentDuration.js'
-import middy from '@middy/core'
-import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
-import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
-import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
-import { shadowToObjects } from '@hello.nrfcloud.com/proto-map/lwm2m/aws'
-import type { LwM2MObjectInstance } from '@hello.nrfcloud.com/proto-map/lwm2m'
 
 const {
 	publicDevicesTableName,
@@ -46,59 +46,43 @@ const db = new DynamoDBClient({})
 const iotData = new IoTDataPlaneClient({})
 const decoder = new TextDecoder()
 
-const validateInput = validateWithTypeBox(
-	Type.Object({
-		// Allows to search by the public device id
-		ids: Type.Optional(Type.Array(PublicDeviceId)),
-	}),
-)
+const InputSchema = Type.Object({
+	// Allows to search by the public device id
+	ids: Type.Optional(Type.Array(PublicDeviceId)),
+})
 
 const h = async (
 	event: APIGatewayProxyEventV2,
+	context: ValidInput<typeof InputSchema> & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
-	console.log(JSON.stringify({ event }))
-
 	const devicesToFetch: { id: string; deviceId: string; model: string }[] = []
 	const minConfirmTime = Date.now() - consentDurationMS
-
-	const qs: Record<string, any> = event.queryStringParameters ?? {}
-	if ('ids' in qs) qs.ids = qs.ids?.split(',') ?? []
-	const maybeValidQuery = validateInput(qs)
-
-	if ('errors' in maybeValidQuery) {
-		return aProblem({
-			title: 'Validation failed',
-			status: 400,
-			detail: formatTypeBoxErrors(maybeValidQuery.errors),
-		})
-	}
 
 	for (const model of Object.keys(models)) {
 		const queryInput: QueryCommandInput = {
 			TableName: publicDevicesTableName,
 			IndexName: publicDevicesTableModelOwnerConfirmedIndex,
-			KeyConditionExpression:
-				'#model = :model AND #ownerConfirmed > :minConfirmTime',
+			KeyConditionExpression: '#model = :model AND #ttl > :minConfirmTime',
 			ExpressionAttributeNames: {
 				'#id': 'id',
 				'#deviceId': 'deviceId',
 				'#model': 'model',
-				'#ownerConfirmed': 'ownerConfirmed',
+				'#ttl': 'ttl',
 			},
 			ExpressionAttributeValues: {
 				':model': { S: model },
 				':minConfirmTime': {
-					S: new Date(minConfirmTime).toISOString(),
+					N: Math.round(new Date(minConfirmTime).getTime() / 1000).toString(),
 				},
 			},
 			ProjectionExpression: '#id, #deviceId',
 		}
 
-		if (maybeValidQuery.value.ids !== undefined) {
+		if (context.validInput.ids !== undefined) {
 			queryInput.ExpressionAttributeValues = {
 				...(queryInput.ExpressionAttributeValues ?? {}),
 				':ids': {
-					SS: maybeValidQuery.value.ids,
+					SS: context.validInput.ids,
 				},
 			}
 			queryInput.FilterExpression = 'contains(:ids, #id) '
@@ -177,4 +161,12 @@ const h = async (
 export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(corsOPTIONS('GET'))
+	.use(requestLogger())
+	.use(
+		validateInput(InputSchema, (event) => {
+			const qs: Record<string, any> = event.queryStringParameters ?? {}
+			if ('ids' in qs) qs.ids = qs.ids?.split(',') ?? []
+			return qs
+		}),
+	)
 	.handler(h)

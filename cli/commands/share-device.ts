@@ -35,7 +35,6 @@ export const shareDeviceCommand = ({
 			deviceId,
 			model,
 			email,
-			confirmed: true,
 		})
 		if ('error' in maybePublished) {
 			console.error(maybePublished.error)

@@ -5,19 +5,21 @@ import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
-	formatTypeBoxErrors,
-	validateWithTypeBox,
-} from '@hello.nrfcloud.com/proto'
+	validateInput,
+	type ValidInput,
+} from '@hello.nrfcloud.com/lambda-helpers/validateInput'
 import { Context, PublicDeviceId } from '@hello.nrfcloud.com/proto-map/api'
 import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
+	Context as LambdaContext,
 } from 'aws-lambda'
-import { deviceJWT } from '../jwt/deviceJWT.js'
 import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
+import { deviceJWT } from '../jwt/deviceJWT.js'
 import { getSettings } from '../settings/jwt.js'
 
 const { TableName, version, idIndex, stackName } = fromEnv({
@@ -30,11 +32,9 @@ const { TableName, version, idIndex, stackName } = fromEnv({
 const db = new DynamoDBClient({})
 const ssm = new SSMClient({})
 
-const validateInput = validateWithTypeBox(
-	Type.Object({
-		id: PublicDeviceId,
-	}),
-)
+const InputSchema = Type.Object({
+	id: PublicDeviceId,
+})
 
 const devicesRepo = publicDevicesRepo({ db, TableName, idIndex })
 
@@ -42,26 +42,13 @@ const jwtSettings = await getSettings({ ssm, stackName })
 
 const h = async (
 	event: APIGatewayProxyEventV2,
+	context: ValidInput<typeof InputSchema> & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
-	console.log(JSON.stringify({ event }))
-
-	const maybeValidQuery = validateInput(event.pathParameters)
-
-	if ('errors' in maybeValidQuery) {
-		return aProblem({
-			title: 'Validation failed',
-			status: 400,
-			detail: formatTypeBoxErrors(maybeValidQuery.errors),
-		})
-	}
-
-	const { id } = maybeValidQuery.value
-
-	const maybeSharedDevice = await devicesRepo.getById(id)
+	const maybeSharedDevice = await devicesRepo.getById(context.validInput.id)
 
 	if ('error' in maybeSharedDevice) {
 		return aProblem({
-			title: `Device with id ${maybeValidQuery.value.id} not shared: ${maybeSharedDevice.error}`,
+			title: `Device with id ${context.validInput.id} not shared: ${maybeSharedDevice.error}`,
 			status: 404,
 		})
 	}
@@ -82,4 +69,6 @@ const h = async (
 export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(corsOPTIONS('GET'))
+	.use(requestLogger())
+	.use(validateInput(InputSchema))
 	.handler(h)

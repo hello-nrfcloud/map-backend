@@ -9,8 +9,8 @@ import type { BackendLambdas } from '../packBackendLambdas.js'
 import { STACK_NAME } from '../stackConfig.js'
 import type { PublicDevices } from './PublicDevices.js'
 
-export class CredentialsAPI extends Construct {
-	public readonly createCredentials: Lambda.IFunction
+export class DeviceManagementAPI extends Construct {
+	public readonly createDevice: Lambda.IFunction
 
 	constructor(
 		parent: Construct,
@@ -21,7 +21,7 @@ export class CredentialsAPI extends Construct {
 			publicDevices,
 		}: {
 			baseLayer: Lambda.ILayerVersion
-			lambdaSources: Pick<BackendLambdas, 'createCredentials' | 'openSSL'>
+			lambdaSources: Pick<BackendLambdas, 'createDevice' | 'openSSL'>
 			openSSLContainerImage: {
 				repo: ECR.IRepository
 				tag: string
@@ -29,7 +29,7 @@ export class CredentialsAPI extends Construct {
 			publicDevices: PublicDevices
 		},
 	) {
-		super(parent, 'credentialsAPI')
+		super(parent, 'deviceManagementAPI')
 
 		const openSSLFn = new Lambda.Function(this, 'openSSLFn', {
 			handler: Lambda.Handler.FROM_IMAGE,
@@ -49,10 +49,10 @@ export class CredentialsAPI extends Construct {
 			...new LambdaLogGroup(this, 'openSSLFnLogs'),
 		})
 
-		this.createCredentials = new PackedLambdaFn(
+		this.createDevice = new PackedLambdaFn(
 			this,
-			'createCredentialsFn',
-			lambdaSources.createCredentials,
+			'createDeviceFn',
+			lambdaSources.createDevice,
 			{
 				description: 'Allows users to create credentials for devices',
 				layers: [baseLayer],
@@ -64,7 +64,7 @@ export class CredentialsAPI extends Construct {
 				},
 			},
 		).fn
-		openSSLFn.grantInvoke(this.createCredentials)
-		publicDevices.publicDevicesTable.grantReadData(this.createCredentials)
+		openSSLFn.grantInvoke(this.createDevice)
+		publicDevices.publicDevicesTable.grantReadData(this.createDevice)
 	}
 }

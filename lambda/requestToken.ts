@@ -11,19 +11,21 @@ import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
-	formatTypeBoxErrors,
-	validateWithTypeBox,
-} from '@hello.nrfcloud.com/proto'
+	validateInput,
+	type ValidInput,
+} from '@hello.nrfcloud.com/lambda-helpers/validateInput'
 import { Email } from '@hello.nrfcloud.com/proto-map/api'
 import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
+	Context as LambdaContext,
 } from 'aws-lambda'
+import { sendEmailVerificationEmail } from '../email/sendEmailVerificationEmail.js'
 import { emailConfirmationTokensRepo } from '../users/emailConfirmationTokensRepo.js'
-import { sendEmailVerificationEmail } from './sendEmailVerificationEmail.js'
 
 const { emailConfirmationTokensTableName, fromEmail, isTestString, version } =
 	fromEnv({
@@ -50,27 +52,15 @@ const { track, metrics } = metricsForComponent(
 	'hello-nrfcloud-map',
 )
 
-const validateInput = validateWithTypeBox(
-	Type.Object({
-		email: Email,
-	}),
-)
+const InputSchema = Type.Object({
+	email: Email,
+})
 
 const h = async (
 	event: APIGatewayProxyEventV2,
+	context: ValidInput<typeof InputSchema> & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
-	console.log(JSON.stringify(event))
-
-	const maybeValidInput = validateInput(JSON.parse(event.body ?? '{}'))
-	if ('errors' in maybeValidInput) {
-		return aProblem({
-			title: 'Validation failed',
-			status: 400,
-			detail: formatTypeBoxErrors(maybeValidInput.errors),
-		})
-	}
-
-	const { email } = maybeValidInput.value
+	const { email } = context.validInput
 
 	const maybeToken = await tokensRepo.requestToken({
 		email,
@@ -107,4 +97,6 @@ export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(corsOPTIONS('POST'))
 	.use(logMetrics(metrics))
+	.use(requestLogger())
+	.use(validateInput(InputSchema))
 	.handler(h)

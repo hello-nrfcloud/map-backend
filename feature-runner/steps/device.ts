@@ -99,14 +99,12 @@ const sharedDevice = (
 			const repo = publicDevicesRepo({
 				db,
 				TableName: publicDevicesTableName,
-				superUsersEmailDomain: 'example.com',
 				idIndex,
 			})
 			const d = await repo.share({
 				deviceId,
 				model: modelName,
 				email: email(),
-				confirmed: true,
 			})
 			if ('error' in d)
 				throw new Error(`Could not share device: ${d.error.message}!`)

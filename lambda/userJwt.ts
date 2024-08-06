@@ -5,21 +5,22 @@ import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
-	formatTypeBoxErrors,
-	validateWithTypeBox,
-} from '@hello.nrfcloud.com/proto'
+	validateInput,
+	type ValidInput,
+} from '@hello.nrfcloud.com/lambda-helpers/validateInput'
 import { Context, Email } from '@hello.nrfcloud.com/proto-map/api'
 import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
+	Context as LambdaContext,
 } from 'aws-lambda'
 import { userJWT } from '../jwt/userJWT.js'
 import { getSettings } from '../settings/jwt.js'
 import { emailConfirmationTokensRepo } from '../users/emailConfirmationTokensRepo.js'
-import { tryAsJSON } from '@hello.nrfcloud.com/lambda-helpers/tryAsJSON'
 
 const { TableName, version, stackName } = fromEnv({
 	version: 'VERSION',
@@ -30,16 +31,14 @@ const { TableName, version, stackName } = fromEnv({
 const db = new DynamoDBClient({})
 const ssm = new SSMClient({})
 
-const validateInput = validateWithTypeBox(
-	Type.Object({
-		email: Email,
-		token: Type.String({
-			minLength: 1,
-			title: 'Token',
-			description: 'The current email confirmation token',
-		}),
+const InputSchema = Type.Object({
+	email: Email,
+	token: Type.String({
+		minLength: 1,
+		title: 'Token',
+		description: 'The current email confirmation token',
 	}),
-)
+})
 
 const tokenRepo = emailConfirmationTokensRepo({ db, TableName })
 
@@ -47,20 +46,9 @@ const jwtSettings = await getSettings({ ssm, stackName })
 
 const h = async (
 	event: APIGatewayProxyEventV2,
+	context: ValidInput<typeof InputSchema> & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
-	console.log(JSON.stringify({ event }))
-
-	const maybeValidQuery = validateInput(tryAsJSON(event.body))
-
-	if ('errors' in maybeValidQuery) {
-		return aProblem({
-			title: 'Validation failed',
-			status: 400,
-			detail: formatTypeBoxErrors(maybeValidQuery.errors),
-		})
-	}
-
-	const { email, token } = maybeValidQuery.value
+	const { email, token } = context.validInput
 
 	const maybeValidToken = await tokenRepo.verifyToken({
 		email,
@@ -87,4 +75,6 @@ const h = async (
 export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(corsOPTIONS('POST'))
+	.use(requestLogger())
+	.use(validateInput(InputSchema))
 	.handler(h)

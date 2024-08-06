@@ -1,38 +1,51 @@
-import { getAPISettings } from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
+import { MetricUnit } from '@aws-lambda-powertools/metrics'
+import { logMetrics } from '@aws-lambda-powertools/metrics/middleware'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
 import { SSMClient } from '@aws-sdk/client-ssm'
-import { STACK_NAME } from '../cdk/stackConfig.js'
 import { fromEnv } from '@bifravst/from-env'
-import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda'
+import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
+import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
+import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
+import {
+	validateInput,
+	type ValidInput,
+} from '@hello.nrfcloud.com/lambda-helpers/validateInput'
+import { devices as devicesApi } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
+import { getAPISettings } from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
+import {
+	Context,
+	Model,
+	type DeviceCredentials,
+} from '@hello.nrfcloud.com/proto-map/api'
+import middy from '@middy/core'
+import { Type, type Static } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
+	Context as LambdaContext,
 } from 'aws-lambda'
-import { devices as devicesApi } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
+import { randomUUID } from 'node:crypto'
+import { STACK_NAME } from '../cdk/stackConfig.js'
 import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import middy from '@middy/core'
-import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
-import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
-import { logMetrics } from '@aws-lambda-powertools/metrics/middleware'
-import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
-import { MetricUnit } from '@aws-lambda-powertools/metrics'
+import { verifyUserToken } from '../jwt/verifyUserToken.js'
 import { NRF_CLOUD_ACCOUNT } from '../settings/account.js'
-import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
-import {
-	Context,
-	type DeviceCredentials,
-} from '@hello.nrfcloud.com/proto-map/api'
-import type { Static } from '@sinclair/typebox'
+import { getSettings } from '../settings/jwt.js'
+import { withUser, type WithUser } from './middleware/withUser.js'
 
 const {
 	backendStackName,
+	stackName,
 	openSslLambdaFunctionName,
 	publicDevicesTableName,
 	idIndex,
 	version,
 } = fromEnv({
 	backendStackName: 'BACKEND_STACK_NAME',
+	stackName: 'STACK_NAME',
 	openSslLambdaFunctionName: 'OPENSSL_LAMBDA_FUNCTION_NAME',
 	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
 	idIndex: 'PUBLIC_DEVICES_ID_INDEX_NAME',
@@ -63,36 +76,37 @@ const repo = publicDevicesRepo({
 })
 
 const { track, metrics } = metricsForComponent(
-	'createCredentials',
+	'createDevice',
 	'hello-nrfcloud-map',
 )
+
+const jwtSettings = await getSettings({ ssm, stackName })
+
+const InputSchema = Type.Object({
+	model: Model,
+})
 
 /**
  * This registers a device, which allows arbitrary users to showcase their products on the map.
  */
 const h = async (
 	event: APIGatewayProxyEventV2,
+	context: ValidInput<typeof InputSchema> & WithUser & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
-	console.log(JSON.stringify({ event }))
+	const deviceId = 'map-' + randomUUID()
 
-	const { deviceId } = JSON.parse(event.body ?? '{}')
-
-	if (deviceId.startsWith('map-') === false)
+	const maybePublished = await repo.share({
+		deviceId,
+		model: 'custom',
+		email: context.user.email,
+	})
+	if ('error' in maybePublished) {
+		console.error(maybePublished.error)
 		return aProblem({
-			status: 400,
-			title: 'Credentials can only be created for devices.',
-		})
-
-	const maybePublicDevice = await repo.getByDeviceId(deviceId)
-
-	if ('error' in maybePublicDevice) {
-		return aProblem({
-			status: 400,
-			title: `Invalid device ID ${deviceId}: ${maybePublicDevice.error}`,
+			title: `Failed to share device: ${maybePublished.error.message}`,
+			status: 500,
 		})
 	}
-
-	const { ownerEmail: email } = maybePublicDevice.device
 
 	const { privateKey, certificate } = JSON.parse(
 		(
@@ -101,7 +115,7 @@ const h = async (
 					FunctionName: openSslLambdaFunctionName,
 					Payload: JSON.stringify({
 						id: deviceId,
-						email,
+						email: context.user.email,
 					}),
 				}),
 			)
@@ -137,7 +151,7 @@ const h = async (
 
 	const res: Static<typeof DeviceCredentials> = {
 		'@context': Context.deviceCredentials.toString(),
-		id: maybePublicDevice.device.id,
+		id: maybePublished.device.id,
 		deviceId,
 		credentials: {
 			privateKey,
@@ -162,4 +176,13 @@ export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(corsOPTIONS('POST'))
 	.use(logMetrics(metrics))
+	.use(requestLogger())
+	.use(validateInput(InputSchema))
+	.use(
+		withUser({
+			verify: verifyUserToken(
+				new Map([[jwtSettings.keyId, jwtSettings.publicKey]]),
+			),
+		}),
+	)
 	.handler(h)

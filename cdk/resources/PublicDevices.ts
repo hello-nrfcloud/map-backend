@@ -27,20 +27,6 @@ export class PublicDevices extends Construct {
 		})
 
 		this.publicDevicesTable.addGlobalSecondaryIndex({
-			indexName: this.publicDevicesTableModelOwnerConfirmedIndex,
-			partitionKey: {
-				name: 'model',
-				type: DynamoDB.AttributeType.STRING,
-			},
-			sortKey: {
-				name: 'ownerConfirmed',
-				type: DynamoDB.AttributeType.STRING,
-			},
-			projectionType: DynamoDB.ProjectionType.INCLUDE,
-			nonKeyAttributes: ['id', 'deviceId'],
-		})
-
-		this.publicDevicesTable.addGlobalSecondaryIndex({
 			indexName: this.idIndex,
 			partitionKey: {
 				name: 'id',
