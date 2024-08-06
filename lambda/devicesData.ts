@@ -29,18 +29,14 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { consentDurationMS } from '../devices/consentDuration.js'
 
-const {
-	publicDevicesTableName,
-	publicDevicesTableModelOwnerConfirmedIndex,
-	version,
-} = fromEnv({
-	version: 'VERSION',
-	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
-	publicDevicesTableModelOwnerConfirmedIndex:
-		'PUBLIC_DEVICES_TABLE_MODEL_OWNER_CONFIRMED_INDEX_NAME',
-})(process.env)
+const { publicDevicesTableName, publicDevicesTablemodelTTLIndex, version } =
+	fromEnv({
+		version: 'VERSION',
+		publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',
+		publicDevicesTablemodelTTLIndex:
+			'PUBLIC_DEVICES_TABLE_MODEL_TTL_INDEX_NAME',
+	})(process.env)
 
 const db = new DynamoDBClient({})
 const iotData = new IoTDataPlaneClient({})
@@ -56,13 +52,12 @@ const h = async (
 	context: ValidInput<typeof InputSchema> & LambdaContext,
 ): Promise<APIGatewayProxyResultV2> => {
 	const devicesToFetch: { id: string; deviceId: string; model: string }[] = []
-	const minConfirmTime = Date.now() - consentDurationMS
 
 	for (const model of Object.keys(models)) {
 		const queryInput: QueryCommandInput = {
 			TableName: publicDevicesTableName,
-			IndexName: publicDevicesTableModelOwnerConfirmedIndex,
-			KeyConditionExpression: '#model = :model AND #ttl > :minConfirmTime',
+			IndexName: publicDevicesTablemodelTTLIndex,
+			KeyConditionExpression: '#model = :model AND #ttl > :now',
 			ExpressionAttributeNames: {
 				'#id': 'id',
 				'#deviceId': 'deviceId',
@@ -71,8 +66,8 @@ const h = async (
 			},
 			ExpressionAttributeValues: {
 				':model': { S: model },
-				':minConfirmTime': {
-					N: Math.round(new Date(minConfirmTime).getTime() / 1000).toString(),
+				':now': {
+					N: Math.round(new Date().getTime() / 1000).toString(),
 				},
 			},
 			ProjectionExpression: '#id, #deviceId',

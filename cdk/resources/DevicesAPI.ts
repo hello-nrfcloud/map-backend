@@ -32,8 +32,8 @@ export class DevicesAPI extends Construct {
 				environment: {
 					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
 					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
-					PUBLIC_DEVICES_TABLE_MODEL_OWNER_CONFIRMED_INDEX_NAME:
-						publicDevices.publicDevicesTableModelOwnerConfirmedIndex,
+					PUBLIC_DEVICES_TABLE_MODEL_TTL_INDEX_NAME:
+						publicDevices.publicDevicesTableModelTTLIndex,
 				},
 				initialPolicy: [
 					new IAM.PolicyStatement({
