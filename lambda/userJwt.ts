@@ -10,9 +10,9 @@ import {
 	validateInput,
 	type ValidInput,
 } from '@hello.nrfcloud.com/lambda-helpers/validateInput'
-import { Context, Email } from '@hello.nrfcloud.com/proto-map/api'
+import { Context, Email, type UserJWT } from '@hello.nrfcloud.com/proto-map/api'
 import middy from '@middy/core'
-import { Type } from '@sinclair/typebox'
+import { Type, type Static } from '@sinclair/typebox'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
@@ -62,11 +62,19 @@ const h = async (
 		})
 	}
 
+	const jwt = userJWT(email, jwtSettings)
+
+	const res: Static<typeof UserJWT> = {
+		'@context': Context.userJWT.toString(),
+		jwt,
+		email,
+	}
+
 	return aResponse(
 		201,
 		{
+			...res,
 			'@context': Context.userJWT,
-			jwt: userJWT(email, jwtSettings),
 		},
 		60 * 60 * 24, // 24 hours
 	)
