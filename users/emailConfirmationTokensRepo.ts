@@ -5,6 +5,7 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { marshall } from '@aws-sdk/util-dynamodb'
 import { generateCode } from '@hello.nrfcloud.com/proto/fingerprint'
+import { normalizeEmail } from './normalizeEmail.js'
 
 export const emailConfirmationTokensRepo = ({
 	db,
@@ -57,7 +58,7 @@ export const emailConfirmationTokensRepo = ({
 				await db.send(
 					new UpdateItemCommand({
 						TableName,
-						Key: marshall({ email: normalize(email) }),
+						Key: marshall({ email: normalizeEmail(email) }),
 						UpdateExpression:
 							'SET #confirmationToken = :confirmationToken, #ttl = :ttl, #rerequestAfter = :rerequestAfter',
 						ConditionExpression:
@@ -101,7 +102,7 @@ export const emailConfirmationTokensRepo = ({
 				const item = await db.send(
 					new GetItemCommand({
 						TableName,
-						Key: marshall({ email: normalize(email) }),
+						Key: marshall({ email: normalizeEmail(email) }),
 					}),
 				)
 				if (item.Item?.confirmationToken?.S !== token) {
@@ -122,5 +123,3 @@ export const emailConfirmationTokensRepo = ({
 		},
 	}
 }
-
-const normalize = (email: string) => email.trim().toLowerCase()
