@@ -1,10 +1,13 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@bifravst/from-env'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import {
+	ProblemDetailError,
+	problemResponse,
+} from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
 	validateInput,
@@ -53,7 +56,7 @@ const h = async (
 		context.validInput.fingerprint,
 	)
 	if ('error' in maybeDevice) {
-		return aProblem(maybeDevice.error)
+		throw new ProblemDetailError(maybeDevice.error)
 	}
 	const { id: deviceId } = maybeDevice.result
 
@@ -64,7 +67,7 @@ const h = async (
 	console.log(JSON.stringify(maybeSharedDevice))
 
 	if ('error' in maybeSharedDevice) {
-		return aProblem({
+		throw new ProblemDetailError({
 			title: `Device with fingerprint ${context.validInput.fingerprint} not shared: ${maybeSharedDevice.error}`,
 			status: 404,
 		})
@@ -85,4 +88,5 @@ export const handler = middy()
 	.use(corsOPTIONS('GET'))
 	.use(requestLogger())
 	.use(validateInput(InputSchema))
+	.use(problemResponse())
 	.handler(h)

@@ -1,10 +1,13 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@bifravst/from-env'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import {
+	ProblemDetailError,
+	problemResponse,
+} from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
 	validateInput,
@@ -56,7 +59,7 @@ const h = async (
 	})
 
 	if ('error' in maybeValidToken) {
-		return aProblem({
+		throw new ProblemDetailError({
 			title: maybeValidToken.error.message,
 			status: 400,
 		})
@@ -85,4 +88,5 @@ export const handler = middy()
 	.use(corsOPTIONS('POST'))
 	.use(requestLogger())
 	.use(validateInput(InputSchema))
+	.use(problemResponse())
 	.handler(h)

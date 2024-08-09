@@ -1,4 +1,4 @@
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
+import { ProblemDetailError } from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { HttpStatusCode } from '@hello.nrfcloud.com/proto/hello'
 import type { MiddlewareObj } from '@middy/core'
 import type {
@@ -23,7 +23,7 @@ export const withUser = ({
 		)
 		if ('error' in maybeValidJWT) {
 			console.error(`[withUser:jwt]`, maybeValidJWT.error)
-			return aProblem({
+			throw new ProblemDetailError({
 				title: `Failed to validate JWT!`,
 				detail: maybeValidJWT.error.message,
 				status: HttpStatusCode.BAD_REQUEST,

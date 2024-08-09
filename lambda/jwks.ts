@@ -1,10 +1,11 @@
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@bifravst/from-env'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
+import { problemResponse } from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import middy from '@middy/core'
 import type { APIGatewayProxyResultV2 } from 'aws-lambda'
 import { getSettings } from '../settings/jwt.js'
-import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 
 const { version, stackName } = fromEnv({
 	version: 'VERSION',
@@ -36,4 +37,5 @@ const h = async (): Promise<APIGatewayProxyResultV2> => ({
 export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(requestLogger())
+	.use(problemResponse())
 	.handler(h)

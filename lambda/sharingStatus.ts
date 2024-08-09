@@ -1,9 +1,12 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@bifravst/from-env'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import {
+	ProblemDetailError,
+	problemResponse,
+} from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
 	validateInput,
@@ -42,7 +45,7 @@ const h = async (
 	console.log(JSON.stringify(maybeDevice))
 
 	if ('error' in maybeDevice) {
-		return aProblem({
+		throw new ProblemDetailError({
 			title: `Device ${context.validInput.id} not shared: ${maybeDevice.error}`,
 			status: 404,
 		})
@@ -63,4 +66,5 @@ export const handler = middy()
 	.use(corsOPTIONS('GET'))
 	.use(requestLogger())
 	.use(validateInput(InputSchema))
+	.use(problemResponse())
 	.handler(h)

@@ -6,11 +6,14 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { SESClient } from '@aws-sdk/client-ses'
 import { fromEnv } from '@bifravst/from-env'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
+import {
+	ProblemDetailError,
+	problemResponse,
+} from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
 	validateInput,
@@ -68,16 +71,13 @@ const h = async (
 	})
 	if ('error' in maybeToken) {
 		if (maybeToken.error instanceof ConditionalCheckFailedException) {
-			return aProblem({
+			throw new ProblemDetailError({
 				title: `Failed to request token: ${maybeToken.error.message}`,
 				status: 409,
 			})
 		}
 		console.error(maybeToken.error)
-		return aProblem({
-			title: `Failed to request token: ${maybeToken.error.message}`,
-			status: 500,
-		})
+		throw new Error(`Failed to request token: ${maybeToken.error.message}`)
 	}
 
 	track('tokenCreated', MetricUnit.Count, 1)
@@ -99,4 +99,5 @@ export const handler = middy()
 	.use(logMetrics(metrics))
 	.use(requestLogger())
 	.use(validateInput(InputSchema))
+	.use(problemResponse())
 	.handler(h)

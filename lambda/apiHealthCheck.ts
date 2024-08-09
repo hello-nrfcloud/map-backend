@@ -2,10 +2,11 @@ import { fromEnv } from '@bifravst/from-env'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import { problemResponse } from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
+import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import { Context } from '@hello.nrfcloud.com/proto-map/api'
 import middy from '@middy/core'
 import { type APIGatewayProxyResultV2 } from 'aws-lambda'
-import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 
 const { version } = fromEnv({
 	version: 'VERSION',
@@ -21,4 +22,5 @@ export const handler = middy()
 	.use(addVersionHeader(version))
 	.use(corsOPTIONS('POST'))
 	.use(requestLogger())
+	.use(problemResponse())
 	.handler(h)

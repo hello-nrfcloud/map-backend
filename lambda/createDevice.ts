@@ -5,10 +5,10 @@ import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@bifravst/from-env'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
+import { problemResponse } from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
 	validateInput,
@@ -102,10 +102,7 @@ const h = async (
 	})
 	if ('error' in maybePublished) {
 		console.error(maybePublished.error)
-		return aProblem({
-			title: `Failed to share device: ${maybePublished.error.message}`,
-			status: 500,
-		})
+		throw new Error(`Failed to share device: ${maybePublished.error.message}`)
 	}
 
 	const { privateKey, certificate } = JSON.parse(
@@ -138,10 +135,7 @@ const h = async (
 			`registration failed`,
 			JSON.stringify(registration.error),
 		)
-		return aProblem({
-			title: `Registration failed: ${registration.error.message}`,
-			status: 500,
-		})
+		throw new Error(`Registration failed: ${registration.error.message}`)
 	}
 
 	console.log(deviceId, `Registered devices with nRF Cloud`)
@@ -185,4 +179,5 @@ export const handler = middy()
 			),
 		}),
 	)
+	.use(problemResponse())
 	.handler(h)

@@ -1,11 +1,12 @@
-import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
 import run from '@bifravst/run'
 import { createCA } from '@hello.nrfcloud.com/certificate-helpers/ca'
 import { createDeviceCertificate } from '@hello.nrfcloud.com/certificate-helpers/device'
-import middy from '@middy/core'
+import { problemResponse } from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
+import middy from '@middy/core'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 
 /**
  * Allows to use OpenSSL
@@ -52,4 +53,7 @@ const h = async (event: {
 	}
 }
 
-export const handler = middy().use(requestLogger()).handler(h)
+export const handler = middy()
+	.use(requestLogger())
+	.use(problemResponse())
+	.handler(h)

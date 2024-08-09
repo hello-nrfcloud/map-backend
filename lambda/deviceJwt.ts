@@ -1,10 +1,13 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@bifravst/from-env'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
+import {
+	ProblemDetailError,
+	problemResponse,
+} from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
 	validateInput,
@@ -47,7 +50,7 @@ const h = async (
 	const maybeSharedDevice = await devicesRepo.getById(context.validInput.id)
 
 	if ('error' in maybeSharedDevice) {
-		return aProblem({
+		throw new ProblemDetailError({
 			title: `Device with id ${context.validInput.id} not shared: ${maybeSharedDevice.error}`,
 			status: 404,
 		})
@@ -71,4 +74,5 @@ export const handler = middy()
 	.use(corsOPTIONS('GET'))
 	.use(requestLogger())
 	.use(validateInput(InputSchema))
+	.use(problemResponse())
 	.handler(h)

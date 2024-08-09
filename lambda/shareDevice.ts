@@ -6,11 +6,14 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@bifravst/from-env'
-import { aProblem } from '@hello.nrfcloud.com/lambda-helpers/aProblem'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { metricsForComponent } from '@hello.nrfcloud.com/lambda-helpers/metrics'
+import {
+	ProblemDetailError,
+	problemResponse,
+} from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import {
 	validateInput,
@@ -81,7 +84,7 @@ const h = async (
 		context.validInput.fingerprint,
 	)
 	if ('error' in maybeDevice) {
-		return aProblem(maybeDevice.error)
+		throw new ProblemDetailError(maybeDevice.error)
 	}
 	const { id: deviceId } = maybeDevice.result
 	return publish({
@@ -107,16 +110,13 @@ const publish = async ({
 	})
 	if ('error' in maybePublished) {
 		if (maybePublished.error instanceof ConditionalCheckFailedException) {
-			return aProblem({
+			throw new ProblemDetailError({
 				title: `Failed to share device: ${maybePublished.error.message}`,
 				status: 409,
 			})
 		}
 		console.error(maybePublished.error)
-		return aProblem({
-			title: `Failed to share device: ${maybePublished.error.message}`,
-			status: 500,
-		})
+		throw new Error(`Failed to share device: ${maybePublished.error.message}`)
 	}
 
 	track('deviceShared', MetricUnit.Count, 1)
@@ -148,4 +148,5 @@ export const handler = middy()
 			),
 		}),
 	)
+	.use(problemResponse())
 	.handler(h)
