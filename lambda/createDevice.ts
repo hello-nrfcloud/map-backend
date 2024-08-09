@@ -105,19 +105,26 @@ const h = async (
 		throw new Error(`Failed to share device: ${maybePublished.error.message}`)
 	}
 
-	const { privateKey, certificate } = JSON.parse(
-		(
-			await lambda.send(
-				new InvokeCommand({
-					FunctionName: openSslLambdaFunctionName,
-					Payload: JSON.stringify({
-						id: deviceId,
-						email: context.user.email,
-					}),
-				}),
-			)
-		).Payload?.transformToString() ?? '',
+	const executionResult = await lambda.send(
+		new InvokeCommand({
+			FunctionName: openSslLambdaFunctionName,
+			Payload: JSON.stringify({
+				id: deviceId,
+				email: context.user.email,
+			}),
+		}),
 	)
+	if ('FunctionError' in executionResult) {
+		throw new Error(
+			`Invoking Open SSL Lambda failed: ${executionResult.FunctionError}!`,
+		)
+	}
+	const { privateKey, certificate } = JSON.parse(
+		executionResult.Payload?.transformToString() ?? '',
+	)
+	if (privateKey === undefined || certificate === undefined) {
+		throw new Error(`Failed to retrieve credential for device ${deviceId}!`)
+	}
 
 	const deviceDetails = {
 		deviceId,

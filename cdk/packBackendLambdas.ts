@@ -1,5 +1,5 @@
-import { packLambdaFromPath } from '@bifravst/aws-cdk-lambda-helpers'
 import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
+import { packLambdaFromPath } from '@bifravst/aws-cdk-lambda-helpers'
 
 export type BackendLambdas = {
 	shareDevice: PackedLambda

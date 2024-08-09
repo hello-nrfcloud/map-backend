@@ -1,5 +1,9 @@
 import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import type { SSMClient } from '@aws-sdk/client-ssm'
+import { createCA } from '@hello.nrfcloud.com/certificate-helpers/ca'
+import { createDeviceCertificate } from '@hello.nrfcloud.com/certificate-helpers/device'
+import { devices as devicesApi } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
+import { getAPISettings } from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
 import { models } from '@hello.nrfcloud.com/proto-map/models'
 import type { Environment } from 'aws-cdk-lib'
 import chalk from 'chalk'
@@ -7,12 +11,8 @@ import { randomUUID } from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
-import { createCA } from '@hello.nrfcloud.com/certificate-helpers/ca'
-import { createDeviceCertificate } from '@hello.nrfcloud.com/certificate-helpers/device'
-import type { CommandDefinition } from './CommandDefinition.js'
-import { getAPISettings } from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
-import { devices as devicesApi } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 import { NRF_CLOUD_ACCOUNT } from '../../settings/account.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 const modelIDs = Object.keys(models)
 

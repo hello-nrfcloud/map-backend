@@ -1,7 +1,7 @@
 import run from '@bifravst/run'
 import fs from 'node:fs/promises'
-import path from 'node:path'
 import os from 'node:os'
+import path from 'node:path'
 
 export const generateJWTKeyPair = async (): Promise<{
 	privateKey: string

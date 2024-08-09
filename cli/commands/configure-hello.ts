@@ -1,12 +1,12 @@
 import type { SSMClient } from '@aws-sdk/client-ssm'
 import chalk from 'chalk'
 import { STACK_NAME } from '../../cdk/stackConfig.js'
-import type { CommandDefinition } from './CommandDefinition.js'
 import {
 	deleteSettings,
 	putSetting,
 	type Settings,
 } from '../../settings/hello.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const configureHelloCommand = ({
 	ssm,

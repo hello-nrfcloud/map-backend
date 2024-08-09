@@ -5,9 +5,9 @@ import {
 	DescribeLogStreamsCommand,
 	GetLogEventsCommand,
 } from '@aws-sdk/client-cloudwatch-logs'
+import { listStackResources } from '@bifravst/cloudformation-helpers'
 import chalk from 'chalk'
 import type { CommandDefinition } from './CommandDefinition.js'
-import { listStackResources } from '@bifravst/cloudformation-helpers'
 
 export const logsCommand = ({
 	stackName,

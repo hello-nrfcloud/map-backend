@@ -1,30 +1,30 @@
+import { repositoryName } from '@bifravst/aws-cdk-ecr-helpers/repository'
+import { LambdaSource } from '@bifravst/aws-cdk-lambda-helpers/cdk'
+import type { PackedLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
+import { ContinuousDeployment } from '@bifravst/ci'
 import type { App } from 'aws-cdk-lib'
 import {
 	CfnOutput,
+	aws_ecr as ECR,
 	aws_lambda as Lambda,
 	Stack,
-	aws_ecr as ECR,
 } from 'aws-cdk-lib'
-import type { BackendLambdas } from './packBackendLambdas.js'
-import type { PackedLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
-import { LambdaSource } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import { PublicDevices } from './resources/PublicDevices.js'
-import { ShareAPI } from './resources/ShareAPI.js'
-import { STACK_NAME } from './stackConfig.js'
-import { DevicesAPI } from './resources/DevicesAPI.js'
-import { DeviceManagementAPI } from './resources/DeviceManagementAPI.js'
 import { ContainerRepositoryId } from '../aws/ecr.js'
-import { repositoryName } from '@bifravst/aws-cdk-ecr-helpers/repository'
-import { ContinuousDeployment } from '@bifravst/ci'
+import type { BackendLambdas } from './packBackendLambdas.js'
 import { API } from './resources/api/API.js'
-import { ApiHealthCheck } from './resources/api/HealthCheck.js'
 import {
 	CustomDomain,
 	type CustomDomainDetails,
 } from './resources/api/CustomDomain.js'
-import { JWKS } from './resources/JWKS.js'
+import { ApiHealthCheck } from './resources/api/HealthCheck.js'
+import { DeviceManagementAPI } from './resources/DeviceManagementAPI.js'
+import { DevicesAPI } from './resources/DevicesAPI.js'
 import { EmailConfirmationTokens } from './resources/EmailConfirmationTokens.js'
+import { JWKS } from './resources/JWKS.js'
+import { PublicDevices } from './resources/PublicDevices.js'
+import { ShareAPI } from './resources/ShareAPI.js'
 import { UserAuthAPI } from './resources/UserAuthAPI.js'
+import { STACK_NAME } from './stackConfig.js'
 
 /**
  * Provides resources for the backend serving data to hello.nrfcloud.com/map

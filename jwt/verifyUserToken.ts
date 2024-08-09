@@ -1,7 +1,7 @@
-import jwt from 'jsonwebtoken'
-import { UserJWTPayload } from '@hello.nrfcloud.com/proto-map/api'
-import { validateWithTypeBox } from '@hello.nrfcloud.com/proto'
 import { ValidationError } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
+import { validateWithTypeBox } from '@hello.nrfcloud.com/proto'
+import { UserJWTPayload } from '@hello.nrfcloud.com/proto-map/api'
+import jwt from 'jsonwebtoken'
 
 const validateUserJWTPayload = validateWithTypeBox(UserJWTPayload)
 

@@ -1,3 +1,4 @@
+import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import {
 	PayloadFormatIndicator,
 	PublishCommand,
@@ -8,13 +9,12 @@ import {
 	regExpMatchedStep,
 	type StepRunner,
 } from '@bifravst/bdd-markdown'
-import { Type } from '@sinclair/typebox'
-import { fingerprintGenerator } from '@hello.nrfcloud.com/proto/fingerprint'
-import { IMEI, email } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
 import type { HttpAPIMock } from '@bifravst/http-api-mock/mock'
-import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
+import { IMEI, email } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
 import { models } from '@hello.nrfcloud.com/proto-map/models'
+import { fingerprintGenerator } from '@hello.nrfcloud.com/proto/fingerprint'
+import { Type } from '@sinclair/typebox'
+import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
 
 const getCurrentWeekNumber = (): number => {
 	const now = new Date()

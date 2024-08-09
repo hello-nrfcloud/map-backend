@@ -1,13 +1,9 @@
 import type { SSMClient } from '@aws-sdk/client-ssm'
 import chalk from 'chalk'
-import type { CommandDefinition } from './CommandDefinition.js'
-import {
-	deleteSetting as deleteSetting,
-	putSetting as putSetting,
-	type Settings,
-} from '../../settings/jwt.js'
 import { STACK_NAME } from '../../cdk/stackConfig.js'
 import { generateJWTKeyPair } from '../../jwt/generateJWTKeyPair.js'
+import { deleteSetting, putSetting, type Settings } from '../../settings/jwt.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const generateJWTKeypairCommand = ({
 	ssm,

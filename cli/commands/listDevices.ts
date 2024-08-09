@@ -1,8 +1,8 @@
 import { ScanCommand, type DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { CommandDefinition } from './CommandDefinition.js'
-import { table } from 'table'
 import chalk from 'chalk'
+import { table } from 'table'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const listDevicesCommand = ({
 	db,
