@@ -31,7 +31,7 @@ export class DevicesAPI extends Construct {
 				layers: [baseLayer],
 				environment: {
 					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
-					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.publicDevicesTableIdIndex,
 					PUBLIC_DEVICES_TABLE_MODEL_TTL_INDEX_NAME:
 						publicDevices.publicDevicesTableModelTTLIndex,
 				},
