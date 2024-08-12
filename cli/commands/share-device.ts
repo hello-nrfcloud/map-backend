@@ -17,7 +17,6 @@ export const shareDeviceCommand = ({
 }): CommandDefinition => ({
 	command: `share-device <deviceId> <model> <email>`,
 	action: async (deviceId, model, email) => {
-		console.log(publicDevicesTableName)
 		if (!modelIDs.includes(model))
 			throw new Error(
 				`Unknown model ${model}. Known models are ${modelIDs.join(', ')}.`,
