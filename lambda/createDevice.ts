@@ -97,7 +97,7 @@ const h = async (
 
 	const maybePublished = await repo.share({
 		deviceId,
-		model: 'custom',
+		model: context.validInput.model,
 		email: context.user.email,
 	})
 	if ('error' in maybePublished) {
@@ -129,7 +129,7 @@ const h = async (
 	const deviceDetails = {
 		deviceId,
 		subType: 'map-custom',
-		tags: ['map-custom'],
+		tags: ['map-custom', context.validInput.model],
 		certPem: certificate,
 	}
 	console.debug(`Registering`, JSON.stringify(deviceDetails))

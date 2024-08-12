@@ -9,6 +9,7 @@ export class ShareAPI extends Construct {
 	public readonly sharingStatusFn: Lambda.IFunction
 	public readonly deviceJwtFn: Lambda.IFunction
 	public readonly sharingStatusFingerprintFn: Lambda.IFunction
+	public readonly listUserDevicesFn: Lambda.IFunction
 	constructor(
 		parent: Construct,
 		{
@@ -26,6 +27,7 @@ export class ShareAPI extends Construct {
 				| 'sharingStatus'
 				| 'sharingStatusFingerprint'
 				| 'deviceJwt'
+				| 'listUserDevices'
 			>
 		},
 	) {
@@ -40,7 +42,7 @@ export class ShareAPI extends Construct {
 				layers: [baseLayer],
 				environment: {
 					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
-					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.publicDevicesTableIdIndex,
 					IS_TEST: this.node.getContext('isTest') === true ? '1' : '0',
 				},
 			},
@@ -56,7 +58,7 @@ export class ShareAPI extends Construct {
 				layers: [baseLayer],
 				environment: {
 					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
-					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.publicDevicesTableIdIndex,
 				},
 			},
 		).fn
@@ -72,7 +74,7 @@ export class ShareAPI extends Construct {
 				layers: [baseLayer],
 				environment: {
 					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
-					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.publicDevicesTableIdIndex,
 				},
 			},
 		).fn
@@ -90,10 +92,26 @@ export class ShareAPI extends Construct {
 				layers: [baseLayer, jwtLayer],
 				environment: {
 					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
-					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.publicDevicesTableIdIndex,
 				},
 			},
 		).fn
 		publicDevices.publicDevicesTable.grantReadData(this.deviceJwtFn)
+
+		this.listUserDevicesFn = new PackedLambdaFn(
+			this,
+			'listUserDevicesFn',
+			lambdaSources.listUserDevices,
+			{
+				description: 'List user devices',
+				layers: [baseLayer, jwtLayer],
+				environment: {
+					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+					PUBLIC_DEVICES_OWNER_EMAIL_INDEX_NAME:
+						publicDevices.publicDevicesTableOwnerEmailIndex,
+				},
+			},
+		).fn
+		publicDevices.publicDevicesTable.grantReadData(this.listUserDevicesFn)
 	}
 }

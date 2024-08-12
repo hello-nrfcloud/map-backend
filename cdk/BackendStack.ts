@@ -17,7 +17,7 @@ import {
 	type CustomDomainDetails,
 } from './resources/api/CustomDomain.js'
 import { ApiHealthCheck } from './resources/api/HealthCheck.js'
-import { DeviceManagementAPI } from './resources/DeviceManagementAPI.js'
+import { CreateDeviceAPI } from './resources/DeviceManagementAPI.js'
 import { DevicesAPI } from './resources/DevicesAPI.js'
 import { EmailConfirmationTokens } from './resources/EmailConfirmationTokens.js'
 import { JWKS } from './resources/JWKS.js'
@@ -92,7 +92,7 @@ export class BackendStack extends Stack {
 		new CfnOutput(this, 'publicDevicesTableIdIndexName', {
 			exportName: `${this.stackName}:publicDevicesTableIdIndexName`,
 			description: 'name of the public devices table id index',
-			value: publicDevices.idIndex,
+			value: publicDevices.publicDevicesTableIdIndex,
 		})
 
 		const api = new API(this)
@@ -140,6 +140,7 @@ export class BackendStack extends Stack {
 		api.addRoute('GET /share/status', shareAPI.sharingStatusFingerprintFn)
 		api.addRoute('GET /device/{id}', shareAPI.sharingStatusFn)
 		api.addRoute('GET /device/{id}/jwt', shareAPI.deviceJwtFn)
+		api.addRoute('GET /user/devices', shareAPI.listUserDevicesFn)
 
 		const devicesAPI = new DevicesAPI(this, {
 			baseLayer,
@@ -148,7 +149,7 @@ export class BackendStack extends Stack {
 		})
 		api.addRoute('GET /devices', devicesAPI.devicesFn)
 
-		const credentialsAPI = new DeviceManagementAPI(this, {
+		const createDeviceAPI = new CreateDeviceAPI(this, {
 			baseLayer,
 			lambdaSources,
 			openSSLContainerImage: {
@@ -164,8 +165,7 @@ export class BackendStack extends Stack {
 			},
 			publicDevices,
 		})
-
-		api.addRoute('POST /device', credentialsAPI.createDevice)
+		api.addRoute('POST /device', createDeviceAPI.createDevice)
 
 		// User accounts
 		const emailConfirmationTokens = new EmailConfirmationTokens(this)

@@ -9,7 +9,7 @@ import type { BackendLambdas } from '../packBackendLambdas.js'
 import { STACK_NAME } from '../stackConfig.js'
 import type { PublicDevices } from './PublicDevices.js'
 
-export class DeviceManagementAPI extends Construct {
+export class CreateDeviceAPI extends Construct {
 	public readonly createDevice: Lambda.IFunction
 
 	constructor(
@@ -29,7 +29,7 @@ export class DeviceManagementAPI extends Construct {
 			publicDevices: PublicDevices
 		},
 	) {
-		super(parent, 'deviceManagementAPI')
+		super(parent, 'createDeviceAPI')
 
 		const openSSLFn = new Lambda.Function(this, 'openSSLFn', {
 			handler: Lambda.Handler.FROM_IMAGE,
@@ -60,7 +60,7 @@ export class DeviceManagementAPI extends Construct {
 					BACKEND_STACK_NAME: STACK_NAME,
 					OPENSSL_LAMBDA_FUNCTION_NAME: openSSLFn.functionName,
 					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
-					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.idIndex,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.publicDevicesTableIdIndex,
 				},
 			},
 		).fn
