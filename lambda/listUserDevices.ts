@@ -7,6 +7,7 @@ import { corsOPTIONS } from '@hello.nrfcloud.com/lambda-helpers/corsOPTIONS'
 import { problemResponse } from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import { Context, type UserDevices } from '@hello.nrfcloud.com/proto-map/api'
+import { models } from '@hello.nrfcloud.com/proto-map/models'
 import middy from '@middy/core'
 import { type Static } from '@sinclair/typebox'
 import type {
@@ -51,12 +52,15 @@ const h = async (
 
 	const res: Static<typeof UserDevices> = {
 		'@context': Context.userDevices.toString(),
-		devices: devices.map((d) => ({
-			id: d.id,
-			deviceId: d.deviceId,
-			model: d.model,
-			expires: new Date(d.ttl * 1000).toISOString(),
-		})),
+		devices: devices
+			// Filter out devices with unknown models
+			.filter((d) => isModel(d.model))
+			.map((d) => ({
+				id: d.id,
+				deviceId: d.deviceId,
+				model: d.model,
+				expires: new Date(d.ttl * 1000).toISOString(),
+			})),
 	}
 
 	return aResponse(
@@ -82,3 +86,6 @@ export const handler = middy()
 	)
 	.use(problemResponse())
 	.handler(h)
+
+const isModel = (model: string): model is string =>
+	Object.keys(models).includes(model)
