@@ -8,6 +8,7 @@ import {
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import { randomWords } from '@bifravst/random-words'
 import { models } from '@hello.nrfcloud.com/proto-map/models'
+import { normalizeEmail } from '../users/normalizeEmail.js'
 import { consentDurationSeconds } from './consentDuration.js'
 
 export type PublicDeviceRecord = {
@@ -138,7 +139,7 @@ export const publicDevicesRepo = ({
 									Math.round((now ?? new Date()).getTime() / 1000) +
 									consentDurationSeconds,
 								model,
-								ownerEmail: email,
+								ownerEmail: normalizeEmail(email),
 							},
 							{
 								removeUndefinedValues: true,
