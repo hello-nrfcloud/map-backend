@@ -69,7 +69,7 @@ const h = async (
 			...res,
 			'@context': Context.userDevices,
 		},
-		60,
+		0,
 	)
 }
 
