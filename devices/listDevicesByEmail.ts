@@ -2,7 +2,7 @@ import { QueryCommand, type DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { normalizeEmail } from '../users/normalizeEmail.js'
 import { hasItems } from './hasItems.js'
-import type { PublicDeviceRecord } from './publicDevicesRepo.js'
+import type { PublicDeviceRecord } from './PublicDeviceRecord.js'
 
 export const listDevicesByEmail =
 	({
