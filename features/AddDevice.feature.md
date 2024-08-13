@@ -9,7 +9,7 @@ exampleContext:
 # Add Device
 
 > Users can add their own device to the map. For that they first need to confirm
-> their email address. Than they can add new devices and manage the devices that
+> their email address. Then they can add new devices and manage the devices that
 > are associated with their email.
 
 ## Request confirmation token
