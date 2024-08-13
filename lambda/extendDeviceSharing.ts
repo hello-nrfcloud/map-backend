@@ -82,7 +82,7 @@ const h = async (
 
 export const handler = middy()
 	.use(addVersionHeader(version))
-	.use(corsOPTIONS('POST'))
+	.use(corsOPTIONS('PUT'))
 	.use(requestLogger())
 	.use(validateInput(InputSchema))
 	.use(
