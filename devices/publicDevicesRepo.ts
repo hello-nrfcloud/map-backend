@@ -1,44 +1,16 @@
 import {
 	DeleteItemCommand,
 	type DynamoDBClient,
-	GetItemCommand,
 	PutItemCommand,
-	QueryCommand,
 } from '@aws-sdk/client-dynamodb'
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
+import { marshall } from '@aws-sdk/util-dynamodb'
 import { randomWords } from '@bifravst/random-words'
-import { models } from '@hello.nrfcloud.com/proto-map/models'
 import { normalizeEmail } from '../users/normalizeEmail.js'
 import { consentDurationSeconds } from './consentDuration.js'
-
-export type PublicDeviceRecord = {
-	/**
-	 * This is the public ID of the device, a UUIDv4.
-	 * Only the public ID should be shown.
-	 *
-	 * @example "fbb18b8e-c2f9-41fe-8cfa-4107e4e54d72"
-	 */
-	id: string
-	/**
-	 * This is the ID the device uses to connect to nRF Cloud
-	 *
-	 * @example "oob-352656108602296"
-	 */
-	deviceId: string
-	model: keyof typeof models
-	ownerEmail: string
-	ttl: number
-}
-
-const modelNames = Object.keys(models)
-
-type PublicDeviceRecordError = {
-	error:
-		| 'not_found'
-		| 'not_confirmed'
-		| 'confirmation_expired'
-		| 'unsupported_model'
-}
+import { getDevicebyDeviceId } from './getDevicebyDeviceId.js'
+import { getDeviceId } from './getDeviceId.js'
+import type { PublicDeviceRecord } from './PublicDeviceRecord.js'
+import type { PublicDeviceRecordError } from './PublicDeviceRecordError.js'
 
 export const publicDevicesRepo = ({
 	db,
@@ -79,49 +51,14 @@ export const publicDevicesRepo = ({
 		  }
 	>
 } => {
-	const getByDeviceId = async (
-		deviceId: string,
-	): Promise<{ device: PublicDeviceRecord } | PublicDeviceRecordError> => {
-		const { Item } = await db.send(
-			new GetItemCommand({
-				TableName,
-				Key: marshall({
-					deviceId: deviceId.toLowerCase(),
-				}),
-			}),
-		)
-		if (Item === undefined) return { error: 'not_found' }
-		const device = unmarshall(Item) as PublicDeviceRecord
-		if (device.ttl * 1000 < Date.now()) return { error: 'confirmation_expired' }
-		if (!modelNames.includes(device.model))
-			return { error: 'unsupported_model' }
-		return {
-			device,
-		}
-	}
 	return {
-		getByDeviceId,
+		getByDeviceId: getDevicebyDeviceId({ db, TableName }),
 		getById: async (id) => {
-			const { Items } = await db.send(
-				new QueryCommand({
-					TableName,
-					IndexName: idIndex,
-					KeyConditionExpression: '#id = :id',
-					ExpressionAttributeNames: {
-						'#id': 'id',
-						'#deviceId': 'deviceId',
-					},
-					ExpressionAttributeValues: {
-						':id': {
-							S: id,
-						},
-					},
-					ProjectionExpression: '#id, #deviceId',
-				}),
-			)
-			const device = (Items ?? [])[0]
-			if (device === undefined) return { error: 'not_found' }
-			return await getByDeviceId(unmarshall(device).deviceId)
+			const deviceId = await getDeviceId({ db, TableName, idIndex })(id)
+			if ('error' in deviceId) {
+				return deviceId
+			}
+			return getDevicebyDeviceId({ db, TableName })(deviceId.deviceId)
 		},
 		// TODO: limit the amount of devices that can be created by a user
 		share: async ({ deviceId, model, email }) => {
