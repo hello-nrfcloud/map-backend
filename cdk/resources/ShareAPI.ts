@@ -129,6 +129,8 @@ export class ShareAPI extends Construct {
 				},
 			},
 		).fn
-		publicDevices.publicDevicesTable.grantWriteData(this.extendDeviceSharingFn)
+		publicDevices.publicDevicesTable.grantReadWriteData(
+			this.extendDeviceSharingFn,
+		)
 	}
 }

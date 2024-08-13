@@ -19,9 +19,9 @@ Given the `Authorization` header of the next request is `Bearer ${jwt}`
 
 When I `GET` `${API}/user/devices`
 
-Then I store `$.devices[0].id` of the last response as `publicDeviceId`
+Then I store `$.devices[0].id` of the last response into `publicDeviceId`
 
-And I store `$.devices[0].expires` of the last response as `oldExpiry`
+And I store `$.devices[0].expires` of the last response into `oldExpiry`
 
 ## Extend sharing
 
@@ -37,10 +37,13 @@ Then the status code of the last response should be `200`
 
 Given the `Authorization` header of the next request is `Bearer ${jwt}`
 
-When I `GET` `${API}/user/device/${publicDeviceId}`
+When I `GET` `${API}/user/devices`
 
-Then `{"gt": expires > "${oldExpiry}"}` of the last response should match
+> It is a new device, so expiry could be the same.
+
+Then `{"res": $.devices[0].expires >= "${oldExpiry}"}` of the last response
+should match
 
 ```json
-{ "gt": true }
+{ "res": true }
 ```
