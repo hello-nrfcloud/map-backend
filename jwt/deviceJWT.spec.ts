@@ -12,6 +12,7 @@ void describe('deviceJWT()', () => {
 
 		const deviceId = randomWords({ numWords: 3 }).join('-')
 		const id = crypto.randomUUID()
+		const ts = Math.floor(Date.now() / 1000)
 
 		const token = deviceJWT(
 			{
@@ -39,11 +40,7 @@ void describe('deviceJWT()', () => {
 		assert.equal(payload.deviceId, deviceId)
 		assert.equal(payload.id, id)
 		assert.equal(payload.model, 'thingy91x')
-		assert.equal(
-			(payload.iat ?? 0) >= Math.floor(Date.now() / 1000),
-			true,
-			'Should not be in the past',
-		)
+		assert.equal((payload.iat ?? 0) >= ts, true, 'Should not be in the past')
 		assert.equal(
 			payload.exp,
 			(payload.iat ?? 0) + 3600,
