@@ -7,8 +7,8 @@ import { marshall } from '@aws-sdk/util-dynamodb'
 import { randomWords } from '@bifravst/random-words'
 import { normalizeEmail } from '../users/normalizeEmail.js'
 import { consentDurationSeconds } from './consentDuration.js'
-import { getByDeviceId } from './getByDeviceId.js'
-import { getById } from './getById.js'
+import { getDevicebyDeviceId } from './getDevicebyDeviceId.js'
+import { getDeviceId } from './getDeviceId.js'
 import type { PublicDeviceRecord } from './PublicDeviceRecord.js'
 import type { PublicDeviceRecordError } from './PublicDeviceRecordError.js'
 
@@ -52,8 +52,14 @@ export const publicDevicesRepo = ({
 	>
 } => {
 	return {
-		getByDeviceId: getByDeviceId({db, TableName}),
-		getById: getById({ db, TableName, idIndex }),
+		getByDeviceId: getDevicebyDeviceId({ db, TableName }),
+		getById: async (id) => {
+			const deviceId = await getDeviceId({ db, TableName, idIndex })(id)
+			if ('error' in deviceId) {
+				return deviceId
+			}
+			return getDevicebyDeviceId({ db, TableName })(deviceId.deviceId)
+		},
 		// TODO: limit the amount of devices that can be created by a user
 		share: async ({ deviceId, model, email }) => {
 			const id = randomWords({ numWords: 3 }).join('-')

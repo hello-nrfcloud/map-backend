@@ -141,6 +141,10 @@ export class BackendStack extends Stack {
 		api.addRoute('GET /device/{id}', shareAPI.sharingStatusFn)
 		api.addRoute('GET /device/{id}/jwt', shareAPI.deviceJwtFn)
 		api.addRoute('GET /user/devices', shareAPI.listUserDevicesFn)
+		api.addRoute(
+			'PUT /user/device/{id}/sharing',
+			shareAPI.extendDeviceSharingFn,
+		)
 
 		const devicesAPI = new DevicesAPI(this, {
 			baseLayer,

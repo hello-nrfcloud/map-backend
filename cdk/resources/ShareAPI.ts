@@ -10,6 +10,7 @@ export class ShareAPI extends Construct {
 	public readonly deviceJwtFn: Lambda.IFunction
 	public readonly sharingStatusFingerprintFn: Lambda.IFunction
 	public readonly listUserDevicesFn: Lambda.IFunction
+	public readonly extendDeviceSharingFn: Lambda.IFunction
 	constructor(
 		parent: Construct,
 		{
@@ -28,6 +29,7 @@ export class ShareAPI extends Construct {
 				| 'sharingStatusFingerprint'
 				| 'deviceJwt'
 				| 'listUserDevices'
+				| 'extendDeviceSharing'
 			>
 		},
 	) {
@@ -113,5 +115,20 @@ export class ShareAPI extends Construct {
 			},
 		).fn
 		publicDevices.publicDevicesTable.grantReadData(this.listUserDevicesFn)
+
+		this.extendDeviceSharingFn = new PackedLambdaFn(
+			this,
+			'extendDeviceSharingFn',
+			lambdaSources.extendDeviceSharing,
+			{
+				description: 'Extend the time a devices sharing expires by 30 days',
+				layers: [baseLayer],
+				environment: {
+					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.publicDevicesTableIdIndex,
+				},
+			},
+		).fn
+		publicDevices.publicDevicesTable.grantWriteData(this.extendDeviceSharingFn)
 	}
 }

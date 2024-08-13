@@ -1,5 +1,6 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb'
 import { SSMClient } from '@aws-sdk/client-ssm'
+import { marshall } from '@aws-sdk/util-dynamodb'
 import { fromEnv } from '@bifravst/from-env'
 import { addVersionHeader } from '@hello.nrfcloud.com/lambda-helpers/addVersionHeader'
 import { aResponse } from '@hello.nrfcloud.com/lambda-helpers/aResponse'
@@ -14,7 +15,6 @@ import {
 	type ValidInput,
 } from '@hello.nrfcloud.com/lambda-helpers/validateInput'
 import { PublicDeviceId } from '@hello.nrfcloud.com/proto-map/api'
-import { models } from '@hello.nrfcloud.com/proto-map/models'
 import middy from '@middy/core'
 import { Type } from '@sinclair/typebox'
 import type {
@@ -23,7 +23,7 @@ import type {
 	Context as LambdaContext,
 } from 'aws-lambda'
 import { STACK_NAME } from '../cdk/stackConfig.js'
-import { getById } from '../devices/getById.js'
+import { getDeviceId } from '../devices/getDeviceId.js'
 import { verifyUserToken } from '../jwt/verifyUserToken.js'
 import { getSettings } from '../settings/jwt.js'
 import { withUser, type WithUser } from './middleware/withUser.js'
@@ -37,7 +37,8 @@ const { stackName, TableName, idIndex, version } = fromEnv({
 	STACK_NAME,
 	...process.env,
 })
-const byId = getById({ db: new DynamoDBClient({}), TableName, idIndex })
+const db = new DynamoDBClient({})
+const byId = getDeviceId({ db, TableName, idIndex })
 const jwtSettings = await getSettings({ ssm: new SSMClient({}), stackName })
 
 const InputSchema = Type.Object({
@@ -63,28 +64,14 @@ const h = async (
 	await db.send(
 		new UpdateItemCommand({
 			TableName,
-			Key: marshall({ email: normalizeEmail(email) }),
-			UpdateExpression:
-				'SET #confirmationToken = :confirmationToken, #ttl = :ttl, #rerequestAfter = :rerequestAfter',
-			ConditionExpression:
-				'attribute_not_exists(email) OR #ttl < :now OR #rerequestAfter < :now',
+			Key: marshall({ deviceId: maybeDevice.deviceId }),
+			UpdateExpression: 'SET #ttl = :newTTL',
 			ExpressionAttributeNames: {
-				'#confirmationToken': 'confirmationToken',
 				'#ttl': 'ttl',
-				'#rerequestAfter': 'rerequestAfter',
 			},
 			ExpressionAttributeValues: {
-				':confirmationToken': {
-					S: confirmationToken,
-				},
-				':ttl': {
-					N: `${Math.floor(expires.getTime() / 1000)}`,
-				},
-				':rerequestAfter': {
-					N: `${Math.floor(rerequestAfter.getTime() / 1000)}`,
-				},
-				':now': {
-					N: `${Math.floor((now?.getTime() ?? Date.now()) / 1000)}`,
+				':newTTL': {
+					N: `${Math.floor(Date.now() / 1000 + 30 * 24 * 60 * 60)}`,
 				},
 			},
 		}),
@@ -107,6 +94,3 @@ export const handler = middy()
 	)
 	.use(problemResponse())
 	.handler(h)
-
-const isModel = (model: string): model is string =>
-	Object.keys(models).includes(model)

@@ -6,7 +6,7 @@ import type { PublicDeviceRecordError } from './PublicDeviceRecordError.js'
 
 const modelNames = Object.keys(models)
 
-export const getByDeviceId =
+export const getDevicebyDeviceId =
 	({ db, TableName }: { db: DynamoDBClient; TableName: string }) =>
 	async (
 		deviceId: string,
