@@ -16,6 +16,7 @@ export type BackendLambdas = {
 	deviceJwt: PackedLambda
 	requestToken: PackedLambda
 	userJwt: PackedLambda
+	notifyAboutExpiringDevices: PackedLambda
 }
 
 const pack = async (id: string) => packLambdaFromPath(id, `lambda/${id}.ts`)
@@ -38,4 +39,5 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	deviceJwt: await pack('deviceJwt'),
 	requestToken: await pack('requestToken'),
 	userJwt: await pack('userJwt'),
+	notifyAboutExpiringDevices: await pack('notifyAboutExpiringDevices'),
 })

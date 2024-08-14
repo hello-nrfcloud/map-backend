@@ -21,6 +21,7 @@ import { CreateDeviceAPI } from './resources/DeviceManagementAPI.js'
 import { DevicesAPI } from './resources/DevicesAPI.js'
 import { EmailConfirmationTokens } from './resources/EmailConfirmationTokens.js'
 import { JWKS } from './resources/JWKS.js'
+import { Notifications } from './resources/Notifications.js'
 import { PublicDevices } from './resources/PublicDevices.js'
 import { ShareAPI } from './resources/ShareAPI.js'
 import { UserAuthAPI } from './resources/UserAuthAPI.js'
@@ -182,6 +183,13 @@ export class BackendStack extends Stack {
 		})
 		api.addRoute('POST /auth', userAuthAPI.requestTokenFn)
 		api.addRoute('POST /auth/jwt', userAuthAPI.createJWTFn)
+
+		new Notifications(this, {
+			baseLayer,
+			lambdaSources,
+			publicDevices,
+			domain,
+		})
 
 		// JWKS
 

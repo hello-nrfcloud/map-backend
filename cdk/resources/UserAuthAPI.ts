@@ -1,8 +1,9 @@
 import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import { aws_iam as IAM, type aws_lambda as Lambda, Stack } from 'aws-cdk-lib'
+import { type aws_lambda as Lambda } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import type { BackendLambdas } from '../packBackendLambdas.js'
 import type { EmailConfirmationTokens } from './EmailConfirmationTokens.js'
+import { permissions } from './ses.js'
 
 export class UserAuthAPI extends Construct {
 	public readonly requestTokenFn: Lambda.IFunction
@@ -39,21 +40,7 @@ export class UserAuthAPI extends Construct {
 					FROM_EMAIL: `notification@${domain}`,
 					IS_TEST: this.node.getContext('isTest') === true ? '1' : '0',
 				},
-				initialPolicy: [
-					new IAM.PolicyStatement({
-						actions: ['ses:SendEmail'],
-						resources: [
-							`arn:aws:ses:${Stack.of(parent).region}:${
-								Stack.of(parent).account
-							}:identity/${domain}`,
-						],
-						conditions: {
-							StringLike: {
-								'ses:FromAddress': `notification@${domain}`,
-							},
-						},
-					}),
-				],
+				initialPolicy: [permissions(this, domain)],
 			},
 		).fn
 		emailConfirmationTokens.table.grantWriteData(this.requestTokenFn)
