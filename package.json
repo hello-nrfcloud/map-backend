@@ -27,7 +27,7 @@
   "license": "BSD-3-Clause",
   "devDependencies": {
     "@aws-sdk/client-acm": "3.637.0",
-    "@aws-sdk/client-cloudwatch-logs": "3.637.0",
+    "@aws-sdk/client-cloudwatch-logs": "3.643.0",
     "@aws-sdk/client-dynamodb": "3.637.0",
     "@aws-sdk/client-ecr": "3.637.0",
     "@aws-sdk/client-iot-data-plane": "3.637.0",
