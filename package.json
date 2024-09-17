@@ -48,7 +48,7 @@
     "@swc/core": "1.7.26",
     "@types/aws-lambda": "8.10.145",
     "@types/cfn-response": "1.0.8",
-    "@types/jsonwebtoken": "9.0.6",
+    "@types/jsonwebtoken": "9.0.7",
     "@types/lodash-es": "4.17.12",
     "aws-cdk": "2.158.0",
     "aws-cdk-lib": "2.158.0",
