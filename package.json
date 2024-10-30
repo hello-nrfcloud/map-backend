@@ -44,7 +44,7 @@
     "@bifravst/run": "1.2.0",
     "@commitlint/config-conventional": "19.5.0",
     "@hello.nrfcloud.com/bdd-markdown-steps": "2.8.186",
-    "@swc/cli": "0.4.0",
+    "@swc/cli": "0.5.0",
     "@swc/core": "1.7.40",
     "@types/aws-lambda": "8.10.145",
     "@types/cfn-response": "1.0.8",
