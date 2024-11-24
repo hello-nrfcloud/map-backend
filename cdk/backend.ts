@@ -3,7 +3,7 @@ import { IAMClient } from '@aws-sdk/client-iam'
 import { ensureGitHubOIDCProvider } from '@bifravst/ci'
 import { fromEnv } from '@bifravst/from-env'
 import { getCertificateArnForDomain } from '../aws/acm.js'
-import pJSON from '../package.json'
+import pJSON from '../package.json' assert { type: 'json' }
 import { BackendApp } from './BackendApp.js'
 import { pack as packBaseLayer } from './baseLayer.js'
 import { pack as packCDKLayer } from './cdkLayer.js'

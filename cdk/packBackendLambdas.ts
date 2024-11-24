@@ -19,7 +19,8 @@ export type BackendLambdas = {
 	notifyAboutExpiringDevices: PackedLambda
 }
 
-const pack = async (id: string) => packLambdaFromPath(id, `lambda/${id}.ts`)
+const pack = async (id: string) =>
+	packLambdaFromPath({ id, sourceFilePath: `lambda/${id}.ts` })
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	shareDevice: await pack('shareDevice'),
@@ -31,10 +32,10 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	extendDeviceSharing: await pack('extendDeviceSharing'),
 	openSSL: await pack('openSSL'),
 	apiHealthCheck: await pack('apiHealthCheck'),
-	createCNAMERecord: await packLambdaFromPath(
-		'createCNAMERecord',
-		'cdk/resources/api/createCNAMERecord.ts',
-	),
+	createCNAMERecord: await packLambdaFromPath({
+		id: 'createCNAMERecord',
+		sourceFilePath: 'cdk/resources/api/createCNAMERecord.ts',
+	}),
 	jwks: await pack('jwks'),
 	deviceJwt: await pack('deviceJwt'),
 	requestToken: await pack('requestToken'),

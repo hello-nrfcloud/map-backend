@@ -16,7 +16,7 @@ import type { logFn } from '../../../cli/log.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-import pJSON from '../../../package.json'
+import pJSON from '../../../package.json' assert { type: 'json' }
 
 export const buildOpenSSLLambdaImage = async (
 	builder: ImageBuilder,
@@ -26,10 +26,10 @@ export const buildOpenSSLLambdaImage = async (
 ): Promise<string> => {
 	const dockerFilePath = path.join(__dirname, 'openssl-lambda')
 
-	const { zipFile, hash } = await packLambdaFromPath(
-		'openSSL',
-		'lambda/openSSL.ts',
-	)
+	const { zipFilePath, hash } = await packLambdaFromPath({
+		id: 'openSSL',
+		sourceFilePath: 'lambda/openSSL.ts',
+	})
 
 	const tag = checkSumOfStrings([
 		await hashFolder(dockerFilePath),
@@ -52,7 +52,7 @@ export const buildOpenSSLLambdaImage = async (
 
 	await run({
 		command: 'unzip',
-		args: ['-o', zipFile, '-d', path.join(distDir, 'lambda')],
+		args: ['-o', zipFilePath, '-d', path.join(distDir, 'lambda')],
 		log: { debug, stderr: debug, stdout: debug },
 	})
 

@@ -66,22 +66,22 @@ export class BackendStack extends Stack {
 			layerVersionName: `${Stack.of(this).stackName}-baseLayer`,
 			code: new LambdaSource(this, {
 				id: 'baseLayer',
-				zipFile: layer.layerZipFile,
+				zipFilePath: layer.layerZipFilePath,
 				hash: layer.hash,
 			}).code,
 			compatibleArchitectures: [Lambda.Architecture.ARM_64],
-			compatibleRuntimes: [Lambda.Runtime.NODEJS_20_X],
+			compatibleRuntimes: [Lambda.Runtime.NODEJS_22_X],
 		})
 
 		const jwtLayerVersion = new Lambda.LayerVersion(this, 'jwtLayer', {
 			layerVersionName: `${Stack.of(this).stackName}-jwtLayer`,
 			code: new LambdaSource(this, {
 				id: 'jwtLayer',
-				zipFile: jwtLayer.layerZipFile,
+				zipFilePath: jwtLayer.layerZipFilePath,
 				hash: jwtLayer.hash,
 			}).code,
 			compatibleArchitectures: [Lambda.Architecture.ARM_64],
-			compatibleRuntimes: [Lambda.Runtime.NODEJS_20_X],
+			compatibleRuntimes: [Lambda.Runtime.NODEJS_22_X],
 		})
 
 		const publicDevices = new PublicDevices(this)
@@ -112,11 +112,11 @@ export class BackendStack extends Stack {
 			const cdkLayerVersion = new Lambda.LayerVersion(this, 'cdkLayer', {
 				code: new LambdaSource(this, {
 					id: 'cdkLayer',
-					zipFile: cdkLayer.layerZipFile,
+					zipFilePath: cdkLayer.layerZipFilePath,
 					hash: cdkLayer.hash,
 				}).code,
 				compatibleArchitectures: [Lambda.Architecture.ARM_64],
-				compatibleRuntimes: [Lambda.Runtime.NODEJS_20_X],
+				compatibleRuntimes: [Lambda.Runtime.NODEJS_22_X],
 			})
 			const domain = new CustomDomain(this, {
 				api,

@@ -23,10 +23,10 @@ export class ApiHealthCheck extends Construct {
 		this.fn = new Lambda.Function(this, 'fn', {
 			handler: lambdaSources.apiHealthCheck.handler,
 			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_20_X,
+			runtime: Lambda.Runtime.NODEJS_22_X,
 			timeout: Duration.seconds(1),
 			memorySize: 1792,
-			code: Lambda.Code.fromAsset(lambdaSources.apiHealthCheck.zipFile),
+			code: Lambda.Code.fromAsset(lambdaSources.apiHealthCheck.zipFilePath),
 			description: 'Simple health-check resource.',
 			layers: [baseLayer],
 			environment: {
