@@ -103,7 +103,7 @@
     "@aws-sdk/client-lambda": "3.699.0",
     "@aws-sdk/client-ses": "3.699.0",
     "@aws-sdk/client-ssm": "3.699.0",
-    "@aws-sdk/util-dynamodb": "3.699.0",
+    "@aws-sdk/util-dynamodb": "3.704.0",
     "@bifravst/from-env": "3.0.2",
     "@bifravst/random-words": "8.0.2",
     "@bifravst/timestream-helpers": "6.0.3",
