@@ -146,6 +146,7 @@ export class BackendStack extends Stack {
 			'PUT /user/device/{id}/sharing',
 			shareAPI.extendDeviceSharingFn,
 		)
+		api.addRoute('DELETE /user/device/{id}', shareAPI.stopDeviceSharingFn)
 
 		const devicesAPI = new DevicesAPI(this, {
 			baseLayer,

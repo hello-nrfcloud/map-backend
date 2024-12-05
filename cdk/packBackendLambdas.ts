@@ -9,6 +9,7 @@ export type BackendLambdas = {
 	createDevice: PackedLambda
 	listUserDevices: PackedLambda
 	extendDeviceSharing: PackedLambda
+	stopDeviceSharing: PackedLambda
 	openSSL: PackedLambda
 	apiHealthCheck: PackedLambda
 	createCNAMERecord: PackedLambda
@@ -30,6 +31,7 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	createDevice: await pack('createDevice'),
 	listUserDevices: await pack('listUserDevices'),
 	extendDeviceSharing: await pack('extendDeviceSharing'),
+	stopDeviceSharing: await pack('stopDeviceSharing'),
 	openSSL: await pack('openSSL'),
 	apiHealthCheck: await pack('apiHealthCheck'),
 	createCNAMERecord: await packLambdaFromPath({
