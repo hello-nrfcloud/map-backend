@@ -11,6 +11,7 @@ export class ShareAPI extends Construct {
 	public readonly sharingStatusFingerprintFn: Lambda.IFunction
 	public readonly listUserDevicesFn: Lambda.IFunction
 	public readonly extendDeviceSharingFn: Lambda.IFunction
+	public readonly stopDeviceSharingFn: Lambda.IFunction
 	constructor(
 		parent: Construct,
 		{
@@ -30,6 +31,7 @@ export class ShareAPI extends Construct {
 				| 'deviceJwt'
 				| 'listUserDevices'
 				| 'extendDeviceSharing'
+				| 'stopDeviceSharing'
 			>
 		},
 	) {
@@ -131,6 +133,23 @@ export class ShareAPI extends Construct {
 		).fn
 		publicDevices.publicDevicesTable.grantReadWriteData(
 			this.extendDeviceSharingFn,
+		)
+
+		this.stopDeviceSharingFn = new PackedLambdaFn(
+			this,
+			'stopDeviceSharingFn',
+			lambdaSources.stopDeviceSharing,
+			{
+				description: 'Stop sharing a device',
+				layers: [baseLayer],
+				environment: {
+					PUBLIC_DEVICES_TABLE_NAME: publicDevices.publicDevicesTable.tableName,
+					PUBLIC_DEVICES_ID_INDEX_NAME: publicDevices.publicDevicesTableIdIndex,
+				},
+			},
+		).fn
+		publicDevices.publicDevicesTable.grantReadWriteData(
+			this.stopDeviceSharingFn,
 		)
 	}
 }
