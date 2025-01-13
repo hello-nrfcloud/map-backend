@@ -4,8 +4,8 @@
   "description": "Cloud backend for hello.nrfcloud.com/map developed using AWS CDK in TypeScript",
   "type": "module",
   "scripts": {
-    "test": "npx globstar -- npx tsx --test --test-reporter spec \"!(dist|node_modules)/**/*.spec.ts\"",
-    "test:e2e": "npx tsx --no-warnings ./feature-runner/run-features.ts > e2e-test-result.json && cat e2e-test-result.json | npx tsx --no-warnings ./feature-runner/console-reporter.ts --only-failed --with-timestamps",
+    "test": "npx globstar -- node --experimental-transform-types --test --test-reporter spec \"!(dist|node_modules)/**/*.spec.ts\"",
+    "test:e2e": "node --experimental-transform-types --no-warnings ./feature-runner/run-features.ts > e2e-test-result.json && cat e2e-test-result.json | node --experimental-transform-types --no-warnings ./feature-runner/console-reporter.ts --only-failed --with-timestamps",
     "prepare": "husky && check-node-version --package"
   },
   "repository": {
@@ -64,8 +64,7 @@
     "jsonata": "2.0.6",
     "semver": "7.6.3",
     "table": "6.9.0",
-    "tsmatchers": "5.0.2",
-    "tsx": "4.19.2"
+    "tsmatchers": "5.0.2"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
