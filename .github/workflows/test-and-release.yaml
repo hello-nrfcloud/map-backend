@@ -220,8 +220,9 @@ jobs:
       - name: Print failed End-to-End tests
         if: failure()
         run:
-          cat e2e-test-result.json | npx tsx --no-warnings
-          ./feature-runner/console-reporter.ts  --only-failed --with-timestamps
+          cat e2e-test-result.json | node --experimental-transform-types
+          --no-warnings ./feature-runner/console-reporter.ts  --only-failed
+          --with-timestamps
 
       - uses: actions/upload-artifact@v4
         if: failure()
