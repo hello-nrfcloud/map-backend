@@ -5,7 +5,7 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { marshall } from '@aws-sdk/util-dynamodb'
 import { generateCode } from '@hello.nrfcloud.com/proto/fingerprint'
-import { normalizeEmail } from './normalizeEmail.js'
+import { normalizeEmail } from './normalizeEmail.ts'
 
 export const emailConfirmationTokensRepo = ({
 	db,

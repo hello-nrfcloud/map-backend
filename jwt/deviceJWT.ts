@@ -1,5 +1,5 @@
 import { Context } from '@hello.nrfcloud.com/proto-map/api'
-import type { PublicDeviceRecord } from '../devices/PublicDeviceRecord.js'
+import type { PublicDeviceRecord } from '../devices/PublicDeviceRecord.ts'
 
 import jwt from 'jsonwebtoken'
 

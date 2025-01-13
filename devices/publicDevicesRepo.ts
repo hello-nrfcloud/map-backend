@@ -5,12 +5,12 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { marshall } from '@aws-sdk/util-dynamodb'
 import { randomWords } from '@bifravst/random-words'
-import { normalizeEmail } from '../users/normalizeEmail.js'
-import { consentDurationSeconds } from './consentDuration.js'
-import { getDevicebyDeviceId } from './getDevicebyDeviceId.js'
-import { getDeviceId } from './getDeviceId.js'
-import type { PublicDeviceRecord } from './PublicDeviceRecord.js'
-import type { PublicDeviceRecordError } from './PublicDeviceRecordError.js'
+import { normalizeEmail } from '../users/normalizeEmail.ts'
+import { consentDurationSeconds } from './consentDuration.ts'
+import { getDevicebyDeviceId } from './getDevicebyDeviceId.ts'
+import { getDeviceId } from './getDeviceId.ts'
+import type { PublicDeviceRecord } from './PublicDeviceRecord.ts'
+import type { PublicDeviceRecordError } from './PublicDeviceRecordError.ts'
 
 export const publicDevicesRepo = ({
 	db,

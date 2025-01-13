@@ -1,7 +1,7 @@
 import { ScanCommand, type DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { hasItems } from './hasItems.js'
-import type { PublicDeviceRecord } from './PublicDeviceRecord.js'
+import { hasItems } from './hasItems.ts'
+import type { PublicDeviceRecord } from './PublicDeviceRecord.ts'
 
 export const listExpiringDevices =
 	({ db, TableName }: { db: DynamoDBClient; TableName: string }) =>

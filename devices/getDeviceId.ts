@@ -1,7 +1,7 @@
 import { QueryCommand, type DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { PublicDeviceRecord } from './PublicDeviceRecord.js'
-import type { PublicDeviceRecordError } from './PublicDeviceRecordError.js'
+import type { PublicDeviceRecord } from './PublicDeviceRecord.ts'
+import type { PublicDeviceRecordError } from './PublicDeviceRecordError.ts'
 
 export const getDeviceId =
 	({

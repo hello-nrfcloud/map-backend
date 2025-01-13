@@ -22,11 +22,11 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { STACK_NAME } from '../cdk/stackConfig.js'
-import { getDeviceId } from '../devices/getDeviceId.js'
-import { verifyUserToken } from '../jwt/verifyUserToken.js'
-import { getSettings } from '../settings/jwt.js'
-import { withUser, type WithUser } from './middleware/withUser.js'
+import { STACK_NAME } from '../cdk/stackConfig.ts'
+import { getDeviceId } from '../devices/getDeviceId.ts'
+import { verifyUserToken } from '../jwt/verifyUserToken.ts'
+import { getSettings } from '../settings/jwt.ts'
+import { withUser, type WithUser } from './middleware/withUser.ts'
 
 const { stackName, TableName, idIndex, version } = fromEnv({
 	stackName: 'STACK_NAME',

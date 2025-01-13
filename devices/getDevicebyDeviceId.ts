@@ -1,8 +1,8 @@
 import { GetItemCommand, type DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import { models } from '@hello.nrfcloud.com/proto-map/models'
-import type { PublicDeviceRecord } from './PublicDeviceRecord.js'
-import type { PublicDeviceRecordError } from './PublicDeviceRecordError.js'
+import type { PublicDeviceRecord } from './PublicDeviceRecord.ts'
+import type { PublicDeviceRecordError } from './PublicDeviceRecordError.ts'
 
 const modelNames = Object.keys(models)
 

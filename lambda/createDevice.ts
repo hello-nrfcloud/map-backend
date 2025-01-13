@@ -29,12 +29,12 @@ import type {
 	Context as LambdaContext,
 } from 'aws-lambda'
 import { randomUUID } from 'node:crypto'
-import { STACK_NAME } from '../cdk/stackConfig.js'
-import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
-import { verifyUserToken } from '../jwt/verifyUserToken.js'
-import { NRF_CLOUD_ACCOUNT } from '../settings/account.js'
-import { getSettings } from '../settings/jwt.js'
-import { withUser, type WithUser } from './middleware/withUser.js'
+import { STACK_NAME } from '../cdk/stackConfig.ts'
+import { publicDevicesRepo } from '../devices/publicDevicesRepo.ts'
+import { verifyUserToken } from '../jwt/verifyUserToken.ts'
+import { NRF_CLOUD_ACCOUNT } from '../settings/account.ts'
+import { getSettings } from '../settings/jwt.ts'
+import { withUser, type WithUser } from './middleware/withUser.ts'
 
 const {
 	backendStackName,

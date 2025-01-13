@@ -5,9 +5,9 @@ import {
 	type Settings,
 } from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
 import chalk from 'chalk'
-import { STACK_NAME } from '../../cdk/stackConfig.js'
-import { NRF_CLOUD_ACCOUNT } from '../../settings/account.js'
-import type { CommandDefinition } from './CommandDefinition.js'
+import { STACK_NAME } from '../../cdk/stackConfig.ts'
+import { NRF_CLOUD_ACCOUNT } from '../../settings/account.ts'
+import type { CommandDefinition } from './CommandDefinition.ts'
 
 export const configureNrfCloudAccountCommand = ({
 	ssm,

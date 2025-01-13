@@ -3,9 +3,9 @@ import { SESClient } from '@aws-sdk/client-ses'
 import { fromEnv } from '@bifravst/from-env'
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import middy from '@middy/core'
-import { STACK_NAME } from '../cdk/stackConfig.js'
-import { listExpiringDevices } from '../devices/listExpiringDevices.js'
-import { sendExpiryNotificationEmail } from '../email/sendExpiryNotificationEmail.js'
+import { STACK_NAME } from '../cdk/stackConfig.ts'
+import { listExpiringDevices } from '../devices/listExpiringDevices.ts'
+import { sendExpiryNotificationEmail } from '../email/sendExpiryNotificationEmail.ts'
 
 const { publicDevicesTableName, fromEmail, isTestString } = fromEnv({
 	publicDevicesTableName: 'PUBLIC_DEVICES_TABLE_NAME',

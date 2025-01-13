@@ -1,8 +1,8 @@
 import type { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { models } from '@hello.nrfcloud.com/proto-map/models'
 import chalk from 'chalk'
-import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
-import type { CommandDefinition } from './CommandDefinition.js'
+import { publicDevicesRepo } from '../../devices/publicDevicesRepo.ts'
+import type { CommandDefinition } from './CommandDefinition.ts'
 
 const modelIDs = Object.keys(models)
 

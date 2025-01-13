@@ -27,8 +27,8 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { sendEmailVerificationEmail } from '../email/sendEmailVerificationEmail.js'
-import { emailConfirmationTokensRepo } from '../users/emailConfirmationTokensRepo.js'
+import { sendEmailVerificationEmail } from '../email/sendEmailVerificationEmail.ts'
+import { emailConfirmationTokensRepo } from '../users/emailConfirmationTokensRepo.ts'
 
 const { emailConfirmationTokensTableName, fromEmail, isTestString, version } =
 	fromEnv({

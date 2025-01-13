@@ -3,9 +3,9 @@ import { ModelID } from '@hello.nrfcloud.com/proto-map/models'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { describe, it, mock } from 'node:test'
-import { assertCall } from '../util/test/assertCall.js'
-import { consentDurationSeconds } from './consentDuration.js'
-import { publicDevicesRepo, toPublic } from './publicDevicesRepo.js'
+import { assertCall } from '../util/test/assertCall.ts'
+import { consentDurationSeconds } from './consentDuration.ts'
+import { publicDevicesRepo, toPublic } from './publicDevicesRepo.ts'
 
 void describe('publicDevicesRepo()', () => {
 	void describe('getByDeviceId()', () => {
