@@ -6,9 +6,9 @@ import {
 	aws_events as Events,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { BackendLambdas } from '../packBackendLambdas.js'
-import type { PublicDevices } from './PublicDevices.js'
-import { permissions } from './ses.js'
+import type { BackendLambdas } from '../packBackendLambdas.ts'
+import type { PublicDevices } from './PublicDevices.ts'
+import { permissions } from './ses.ts'
 
 export class Notifications extends Construct {
 	constructor(

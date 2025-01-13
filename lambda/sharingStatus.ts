@@ -20,7 +20,7 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { publicDevicesRepo, toPublic } from '../devices/publicDevicesRepo.js'
+import { publicDevicesRepo, toPublic } from '../devices/publicDevicesRepo.ts'
 
 const { TableName, version, idIndex } = fromEnv({
 	version: 'VERSION',

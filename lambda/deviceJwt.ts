@@ -21,9 +21,9 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
-import { deviceJWT } from '../jwt/deviceJWT.js'
-import { getSettings } from '../settings/jwt.js'
+import { publicDevicesRepo } from '../devices/publicDevicesRepo.ts'
+import { deviceJWT } from '../jwt/deviceJWT.ts'
+import { getSettings } from '../settings/jwt.ts'
 
 const { TableName, version, idIndex, stackName } = fromEnv({
 	version: 'VERSION',

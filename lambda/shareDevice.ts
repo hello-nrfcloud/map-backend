@@ -32,12 +32,12 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { publicDevicesRepo } from '../devices/publicDevicesRepo.js'
-import { helloApi } from '../hello/api.js'
-import { verifyUserToken } from '../jwt/verifyUserToken.js'
-import { getSettings } from '../settings/hello.js'
-import { getSettings as getJWTSettings } from '../settings/jwt.js'
-import { withUser, type WithUser } from './middleware/withUser.js'
+import { publicDevicesRepo } from '../devices/publicDevicesRepo.ts'
+import { helloApi } from '../hello/api.ts'
+import { verifyUserToken } from '../jwt/verifyUserToken.ts'
+import { getSettings } from '../settings/hello.ts'
+import { getSettings as getJWTSettings } from '../settings/jwt.ts'
+import { withUser, type WithUser } from './middleware/withUser.ts'
 
 const { publicDevicesTableName, version, stackName, idIndex } = fromEnv({
 	version: 'VERSION',

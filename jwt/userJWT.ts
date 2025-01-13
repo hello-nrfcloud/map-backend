@@ -1,7 +1,7 @@
 import { Context } from '@hello.nrfcloud.com/proto-map/api'
 
 import jwt from 'jsonwebtoken'
-import { normalizeEmail } from '../users/normalizeEmail.js'
+import { normalizeEmail } from '../users/normalizeEmail.ts'
 
 export const userJWT = (
 	email: string,

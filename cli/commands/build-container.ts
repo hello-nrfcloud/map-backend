@@ -4,11 +4,11 @@ import {
 	checkIfImageExists,
 } from '@bifravst/aws-cdk-ecr-helpers/image'
 import { getOrCreateRepository } from '@bifravst/aws-cdk-ecr-helpers/repository'
-import { ContainerRepositoryId } from '../../aws/ecr.js'
-import { buildOpenSSLLambdaImage } from '../../cdk/resources/containers/buildOpenSSLLambdaImage.js'
-import { STACK_NAME } from '../../cdk/stackConfig.js'
-import { debug as debugFn } from '../log.js'
-import type { CommandDefinition } from './CommandDefinition.js'
+import { ContainerRepositoryId } from '../../aws/ecr.ts'
+import { buildOpenSSLLambdaImage } from '../../cdk/resources/containers/buildOpenSSLLambdaImage.ts'
+import { STACK_NAME } from '../../cdk/stackConfig.ts'
+import { debug as debugFn } from '../log.ts'
+import type { CommandDefinition } from './CommandDefinition.ts'
 
 export const buildContainersCommand = ({
 	ecr,

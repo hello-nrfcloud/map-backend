@@ -22,9 +22,9 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { publicDevicesRepo, toPublic } from '../devices/publicDevicesRepo.js'
-import { helloApi } from '../hello/api.js'
-import { getSettings } from '../settings/hello.js'
+import { publicDevicesRepo, toPublic } from '../devices/publicDevicesRepo.ts'
+import { helloApi } from '../hello/api.ts'
+import { getSettings } from '../settings/hello.ts'
 
 const { TableName, version, idIndex, stackName } = fromEnv({
 	version: 'VERSION',

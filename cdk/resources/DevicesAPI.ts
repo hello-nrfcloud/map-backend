@@ -1,8 +1,8 @@
 import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import { aws_iam as IAM, type aws_lambda as Lambda } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { BackendLambdas } from '../packBackendLambdas.js'
-import type { PublicDevices } from './PublicDevices.js'
+import type { BackendLambdas } from '../packBackendLambdas.ts'
+import type { PublicDevices } from './PublicDevices.ts'
 
 export class DevicesAPI extends Construct {
 	public readonly devicesFn: Lambda.IFunction

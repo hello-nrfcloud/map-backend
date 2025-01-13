@@ -3,9 +3,9 @@ import type { SSMClient } from '@aws-sdk/client-ssm'
 import { devices as devicesApi } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 import { getAPISettings } from '@hello.nrfcloud.com/nrfcloud-api-helpers/settings'
 import chalk from 'chalk'
-import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
-import { NRF_CLOUD_ACCOUNT } from '../../settings/account.js'
-import type { CommandDefinition } from './CommandDefinition.js'
+import { publicDevicesRepo } from '../../devices/publicDevicesRepo.ts'
+import { NRF_CLOUD_ACCOUNT } from '../../settings/account.ts'
+import type { CommandDefinition } from './CommandDefinition.ts'
 
 export const removeDeviceCommand = ({
 	ssm,

@@ -15,11 +15,11 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { STACK_NAME } from '../cdk/stackConfig.js'
-import { listDevicesByEmail } from '../devices/listDevicesByEmail.js'
-import { verifyUserToken } from '../jwt/verifyUserToken.js'
-import { getSettings } from '../settings/jwt.js'
-import { withUser, type WithUser } from './middleware/withUser.js'
+import { STACK_NAME } from '../cdk/stackConfig.ts'
+import { listDevicesByEmail } from '../devices/listDevicesByEmail.ts'
+import { verifyUserToken } from '../jwt/verifyUserToken.ts'
+import { getSettings } from '../settings/jwt.ts'
+import { withUser, type WithUser } from './middleware/withUser.ts'
 
 const { stackName, publicDevicesTableName, ownerEmailIndex, version } = fromEnv(
 	{

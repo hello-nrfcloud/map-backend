@@ -13,11 +13,11 @@ import { steps as storageSteps } from '@hello.nrfcloud.com/bdd-markdown-steps/st
 import { slashless } from '@hello.nrfcloud.com/nrfcloud-api-helpers/api'
 import chalk from 'chalk'
 import path from 'node:path'
-import type { StackOutputs as BackendStackOutputs } from '../cdk/BackendStack.js'
-import { STACK_NAME } from '../cdk/stackConfig.js'
-import { getSettings } from '../settings/jwt.js'
-import { steps as deviceSteps } from './steps/device.js'
-import { steps as jwtSteps } from './steps/jwt.js'
+import type { StackOutputs as BackendStackOutputs } from '../cdk/BackendStack.ts'
+import { STACK_NAME } from '../cdk/stackConfig.ts'
+import { getSettings } from '../settings/jwt.ts'
+import { steps as deviceSteps } from './steps/device.ts'
+import { steps as jwtSteps } from './steps/jwt.ts'
 
 /**
  * This file configures the BDD Feature runner

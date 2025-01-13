@@ -5,9 +5,9 @@ import {
 import type { aws_ecr as ECR } from 'aws-cdk-lib'
 import { Duration, aws_lambda as Lambda } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { BackendLambdas } from '../packBackendLambdas.js'
-import { STACK_NAME } from '../stackConfig.js'
-import type { PublicDevices } from './PublicDevices.js'
+import type { BackendLambdas } from '../packBackendLambdas.ts'
+import { STACK_NAME } from '../stackConfig.ts'
+import type { PublicDevices } from './PublicDevices.ts'
 
 export class CreateDeviceAPI extends Construct {
 	public readonly createDevice: Lambda.IFunction

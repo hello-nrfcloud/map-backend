@@ -21,9 +21,9 @@ import type {
 	APIGatewayProxyResultV2,
 	Context as LambdaContext,
 } from 'aws-lambda'
-import { userJWT } from '../jwt/userJWT.js'
-import { getSettings } from '../settings/jwt.js'
-import { emailConfirmationTokensRepo } from '../users/emailConfirmationTokensRepo.js'
+import { userJWT } from '../jwt/userJWT.ts'
+import { getSettings } from '../settings/jwt.ts'
+import { emailConfirmationTokensRepo } from '../users/emailConfirmationTokensRepo.ts'
 
 const { TableName, version, stackName } = fromEnv({
 	version: 'VERSION',

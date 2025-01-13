@@ -14,7 +14,7 @@ import { IMEI, email } from '@hello.nrfcloud.com/bdd-markdown-steps/random'
 import { models } from '@hello.nrfcloud.com/proto-map/models'
 import { fingerprintGenerator } from '@hello.nrfcloud.com/proto/fingerprint'
 import { Type } from '@sinclair/typebox'
-import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
+import { publicDevicesRepo } from '../../devices/publicDevicesRepo.ts'
 
 const getCurrentWeekNumber = (): number => {
 	const now = new Date()

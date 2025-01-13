@@ -5,7 +5,7 @@ import { problemResponse } from '@hello.nrfcloud.com/lambda-helpers/problemRespo
 import { requestLogger } from '@hello.nrfcloud.com/lambda-helpers/requestLogger'
 import middy from '@middy/core'
 import type { APIGatewayProxyResultV2 } from 'aws-lambda'
-import { getSettings } from '../settings/jwt.js'
+import { getSettings } from '../settings/jwt.ts'
 
 const { version, stackName } = fromEnv({
 	version: 'VERSION',

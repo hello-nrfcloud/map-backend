@@ -3,8 +3,8 @@ import { ModelID } from '@hello.nrfcloud.com/proto-map/models'
 import jwt from 'jsonwebtoken'
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { deviceJWT } from './deviceJWT.js'
-import { generateJWTKeyPair } from './generateJWTKeyPair.js'
+import { deviceJWT } from './deviceJWT.ts'
+import { generateJWTKeyPair } from './generateJWTKeyPair.ts'
 
 void describe('deviceJWT()', () => {
 	void it('should return a JWT', async () => {

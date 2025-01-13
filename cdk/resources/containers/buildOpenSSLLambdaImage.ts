@@ -11,8 +11,8 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { ContainerRepositoryId } from '../../../aws/ecr.js'
-import type { logFn } from '../../../cli/log.js'
+import { ContainerRepositoryId } from '../../../aws/ecr.ts'
+import type { logFn } from '../../../cli/log.ts'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 

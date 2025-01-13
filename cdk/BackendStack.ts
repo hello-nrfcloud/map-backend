@@ -9,23 +9,23 @@ import {
 	aws_lambda as Lambda,
 	Stack,
 } from 'aws-cdk-lib'
-import { ContainerRepositoryId } from '../aws/ecr.js'
-import type { BackendLambdas } from './packBackendLambdas.js'
-import { API } from './resources/api/API.js'
+import { ContainerRepositoryId } from '../aws/ecr.ts'
+import type { BackendLambdas } from './packBackendLambdas.ts'
+import { API } from './resources/api/API.ts'
 import {
 	CustomDomain,
 	type CustomDomainDetails,
-} from './resources/api/CustomDomain.js'
-import { ApiHealthCheck } from './resources/api/HealthCheck.js'
-import { CreateDeviceAPI } from './resources/DeviceManagementAPI.js'
-import { DevicesAPI } from './resources/DevicesAPI.js'
-import { EmailConfirmationTokens } from './resources/EmailConfirmationTokens.js'
-import { JWKS } from './resources/JWKS.js'
-import { Notifications } from './resources/Notifications.js'
-import { PublicDevices } from './resources/PublicDevices.js'
-import { ShareAPI } from './resources/ShareAPI.js'
-import { UserAuthAPI } from './resources/UserAuthAPI.js'
-import { STACK_NAME } from './stackConfig.js'
+} from './resources/api/CustomDomain.ts'
+import { ApiHealthCheck } from './resources/api/HealthCheck.ts'
+import { CreateDeviceAPI } from './resources/DeviceManagementAPI.ts'
+import { DevicesAPI } from './resources/DevicesAPI.ts'
+import { EmailConfirmationTokens } from './resources/EmailConfirmationTokens.ts'
+import { JWKS } from './resources/JWKS.ts'
+import { Notifications } from './resources/Notifications.ts'
+import { PublicDevices } from './resources/PublicDevices.ts'
+import { ShareAPI } from './resources/ShareAPI.ts'
+import { UserAuthAPI } from './resources/UserAuthAPI.ts'
+import { STACK_NAME } from './stackConfig.ts'
 
 /**
  * Provides resources for the backend serving data to hello.nrfcloud.com/map

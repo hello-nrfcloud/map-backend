@@ -1,9 +1,9 @@
 import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import { type aws_lambda as Lambda } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { BackendLambdas } from '../packBackendLambdas.js'
-import type { EmailConfirmationTokens } from './EmailConfirmationTokens.js'
-import { permissions } from './ses.js'
+import type { BackendLambdas } from '../packBackendLambdas.ts'
+import type { EmailConfirmationTokens } from './EmailConfirmationTokens.ts'
+import { permissions } from './ses.ts'
 
 export class UserAuthAPI extends Construct {
 	public readonly requestTokenFn: Lambda.IFunction

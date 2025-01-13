@@ -10,9 +10,9 @@ import chalk from 'chalk'
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { publicDevicesRepo } from '../../devices/publicDevicesRepo.js'
-import { NRF_CLOUD_ACCOUNT } from '../../settings/account.js'
-import type { CommandDefinition } from './CommandDefinition.js'
+import { publicDevicesRepo } from '../../devices/publicDevicesRepo.ts'
+import { NRF_CLOUD_ACCOUNT } from '../../settings/account.ts'
+import type { CommandDefinition } from './CommandDefinition.ts'
 
 const modelIDs = Object.keys(models)
 

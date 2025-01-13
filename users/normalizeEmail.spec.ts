@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { normalizeEmail } from './normalizeEmail.js'
+import { normalizeEmail } from './normalizeEmail.ts'
 
 void describe('normalizeEmail()', () => {
 	void it('lower-case an email', () => {
