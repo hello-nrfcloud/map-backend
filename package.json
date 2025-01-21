@@ -4,7 +4,7 @@
   "description": "Cloud backend for hello.nrfcloud.com/map developed using AWS CDK in TypeScript",
   "type": "module",
   "scripts": {
-    "test": "npx globstar -- node --experimental-transform-types --test --test-reporter spec \"!(dist|node_modules)/**/*.spec.ts\"",
+    "test": "node --no-warnings --experimental-transform-types --test --test-reporter spec \"!(dist|node_modules)/**/*.spec.ts\"",
     "test:e2e": "node --experimental-transform-types --no-warnings ./feature-runner/run-features.ts > e2e-test-result.json && cat e2e-test-result.json | node --experimental-transform-types --no-warnings ./feature-runner/console-reporter.ts --only-failed --with-timestamps",
     "prepare": "husky && check-node-version --package"
   },
@@ -59,7 +59,6 @@
     "commander": "13.1.0",
     "commitlint": "19.6.1",
     "constructs": "10.4.2",
-    "globstar": "1.0.0",
     "husky": "9.1.7",
     "jsonata": "2.0.6",
     "semver": "7.6.3",
@@ -76,7 +75,7 @@
     ]
   },
   "engines": {
-    "node": ">=22",
+    "node": ">=22.2.0",
     "npm": ">=10"
   },
   "release": {
