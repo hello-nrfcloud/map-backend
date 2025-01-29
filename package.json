@@ -62,7 +62,7 @@
     "husky": "9.1.7",
     "jsonata": "2.0.6",
     "lint-staged": "15.4.3",
-    "semver": "7.6.3",
+    "semver": "7.7.0",
     "table": "6.9.0",
     "tsmatchers": "5.0.2"
   },
