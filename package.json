@@ -39,7 +39,7 @@
     "@bifravst/ci": "2.1.0",
     "@bifravst/cloudformation-helpers": "9.1.1",
     "@bifravst/eslint-config-typescript": "6.1.20",
-    "@bifravst/http-api-mock": "2.1.152",
+    "@bifravst/http-api-mock": "2.1.155",
     "@bifravst/prettier-config": "1.1.7",
     "@bifravst/run": "1.2.0",
     "@commitlint/config-conventional": "19.7.1",
