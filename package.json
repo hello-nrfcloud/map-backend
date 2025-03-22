@@ -36,7 +36,7 @@
     "@bifravst/aws-cdk-lambda-helpers": "3.1.19",
     "@bifravst/aws-ssm-settings-helpers": "1.2.118",
     "@bifravst/bdd-markdown": "8.2.62",
-    "@bifravst/ci": "2.1.0",
+    "@bifravst/ci": "2.1.1",
     "@bifravst/cloudformation-helpers": "9.1.1",
     "@bifravst/eslint-config-typescript": "6.1.21",
     "@bifravst/http-api-mock": "2.1.165",
