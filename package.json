@@ -52,7 +52,7 @@
     "@types/lodash-es": "4.17.12",
     "aws-cdk": "2.1005.0",
     "aws-cdk-lib": "2.185.0",
-    "cdk": "2.1004.0",
+    "cdk": "2.1006.0",
     "cfn-response": "1.0.1",
     "chalk": "5.4.1",
     "check-node-version": "4.2.1",
