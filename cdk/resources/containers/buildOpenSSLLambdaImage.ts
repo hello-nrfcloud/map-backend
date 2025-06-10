@@ -16,7 +16,7 @@ import type { logFn } from '../../../cli/log.ts'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-import pJSON from '../../../package.json' assert { type: 'json' }
+import pJSON from '../../../package.json' with { type: 'json' }
 
 export const buildOpenSSLLambdaImage = async (
 	builder: ImageBuilder,

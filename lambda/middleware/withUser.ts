@@ -1,5 +1,7 @@
-import { ProblemDetailError } from '@hello.nrfcloud.com/lambda-helpers/problemResponse'
-import { HttpStatusCode } from '@hello.nrfcloud.com/proto/hello'
+import {
+	HttpStatusCode,
+	ProblemDetailError,
+} from '@hello.nrfcloud.com/proto/hello'
 import type { MiddlewareObj } from '@middy/core'
 import type {
 	APIGatewayProxyEventV2,
