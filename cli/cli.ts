@@ -10,7 +10,7 @@ import { program } from 'commander'
 import { env } from '../aws/env.ts'
 import type { StackOutputs } from '../cdk/BackendStack.ts'
 import { STACK_NAME } from '../cdk/stackConfig.ts'
-import psjon from '../package.json' assert { type: 'json' }
+import psjon from '../package.json' with { type: 'json' }
 import type { CommandDefinition } from './commands/CommandDefinition.ts'
 import { buildContainersCommand } from './commands/build-container.ts'
 import { configureHelloCommand } from './commands/configure-hello.ts'
