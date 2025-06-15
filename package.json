@@ -34,7 +34,7 @@
     "@aws-sdk/client-route-53": "3.826.0",
     "@bifravst/aws-cdk-ecr-helpers": "1.3.85",
     "@bifravst/aws-cdk-lambda-helpers": "3.3.56",
-    "@bifravst/aws-ssm-settings-helpers": "1.2.157",
+    "@bifravst/aws-ssm-settings-helpers": "1.2.160",
     "@bifravst/bdd-markdown": "8.2.66",
     "@bifravst/ci": "2.1.1",
     "@bifravst/cloudformation-helpers": "9.1.1",
