@@ -61,7 +61,7 @@
     "constructs": "10.4.2",
     "husky": "9.1.7",
     "jsonata": "2.1.0",
-    "lint-staged": "16.1.5",
+    "lint-staged": "16.1.6",
     "semver": "7.7.2",
     "table": "6.9.0",
     "tsmatchers": "5.0.3"
