@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -62,7 +62,7 @@ jobs:
       requestsTableName: ${{ steps.create.outputs.requestsTableName }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -124,7 +124,7 @@ jobs:
       tag: ${{ steps.build.outputs.tag }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -181,7 +181,7 @@ jobs:
       HTTP_API_MOCK_API_URL: ${{ needs.http-api-mock.outputs.apiURL }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: store checkout out version
         id: ref
@@ -261,7 +261,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.e2e-tests.outputs.ref }}
 
