@@ -47,7 +47,7 @@
     "@swc/cli": "0.8.0",
     "@swc/core": "1.15.21",
     "@types/aws-lambda": "8.10.161",
-    "@types/cfn-response": "1.0.8",
+    "@types/cfn-response": "1.0.9",
     "@types/jsonwebtoken": "9.0.10",
     "@types/lodash-es": "4.17.12",
     "aws-cdk": "2.1109.0",
