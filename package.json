@@ -50,7 +50,7 @@
     "@types/cfn-response": "1.0.9",
     "@types/jsonwebtoken": "9.0.10",
     "@types/lodash-es": "4.17.12",
-    "aws-cdk": "2.1132.1",
+    "aws-cdk": "2.1133.0",
     "aws-cdk-lib": "2.262.0",
     "cdk": "2.1132.1",
     "cfn-response": "1.0.1",
