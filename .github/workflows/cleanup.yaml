@@ -36,6 +36,9 @@ jobs:
           node-version: "22.x"
           cache: "npm"
 
+      - name: Install NPM version specified in package.json
+        uses: ./.github/actions/install-npm
+
       - name: Install dependencies
         run: npm ci --no-audit
 
@@ -76,6 +79,9 @@ jobs:
         with:
           node-version: "22.x"
           cache: "npm"
+
+      - name: Install NPM version specified in package.json
+        uses: ./.github/actions/install-npm
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
