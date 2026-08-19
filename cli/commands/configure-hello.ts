@@ -50,7 +50,7 @@ export const configureHelloCommand = ({
 		const { name } = await putSetting({
 			ssm,
 			stackName: STACK_NAME,
-		})(property as keyof Settings, new URL(value), deleteBeforeUpdate)
+		})(property, new URL(value), deleteBeforeUpdate)
 
 		console.log()
 		console.log(

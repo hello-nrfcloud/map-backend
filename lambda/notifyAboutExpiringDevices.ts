@@ -32,9 +32,7 @@ const h = async (): Promise<void> => {
 
 	const devicesByEmail = devices.reduce(
 		(acc, d) => {
-			if (acc[d.ownerEmail] === undefined) {
-				acc[d.ownerEmail] = []
-			}
+			acc[d.ownerEmail] ??= []
 			acc[d.ownerEmail]!.push(d.id)
 			return acc
 		},
