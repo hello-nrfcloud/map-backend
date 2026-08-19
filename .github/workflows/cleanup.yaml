@@ -95,4 +95,4 @@ jobs:
 
       - name: Delete HTTP API mock
         run: |
-          npx @bifravst/http-api-mock destroy ${{ inputs.http_api_mock_stack_name }}
+          node node_modules/@bifravst/http-api-mock/npm/cdk/http-api-mock.js --destroy --stack-name ${{ inputs.http_api_mock_stack_name }}

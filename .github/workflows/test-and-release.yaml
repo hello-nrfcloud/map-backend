@@ -91,7 +91,7 @@ jobs:
       - name: Create HTTP API mock
         id: create
         run: |
-          npx @bifravst/http-api-mock > http-api-mock.json
+          node node_modules/@bifravst/http-api-mock/npm/cdk/http-api-mock.js > http-api-mock.json
           echo "stackName=`jq -r '.stackName' http-api-mock.json`" >> $GITHUB_OUTPUT
           echo "responsesTableName=`jq -r '.responsesTableName' http-api-mock.json`" >> $GITHUB_OUTPUT
           echo "apiURL=`jq -r '.apiURL' http-api-mock.json`" >> $GITHUB_OUTPUT
