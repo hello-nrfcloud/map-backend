@@ -52,7 +52,7 @@
     "@types/lodash-es": "4.17.12",
     "@typescript/native": "npm:typescript@7.0.2",
     "aws-cdk": "2.1138.0",
-    "aws-cdk-lib": "2.265.0",
+    "aws-cdk-lib": "2.266.0",
     "cdk": "2.1137.0",
     "cfn-response": "1.0.1",
     "chalk": "6.0.0",
