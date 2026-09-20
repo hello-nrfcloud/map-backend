@@ -106,7 +106,7 @@
     "@aws-sdk/client-ssm": "3.1113.0",
     "@aws-sdk/util-dynamodb": "3.996.9",
     "@bifravst/from-env": "4.0.0",
-    "@bifravst/random-words": "8.0.3",
+    "@bifravst/random-words": "9.0.0",
     "@bifravst/timestream-helpers": "7.0.0",
     "@hello.nrfcloud.com/certificate-helpers": "1.0.2",
     "@hello.nrfcloud.com/lambda-helpers": "5.0.54",
